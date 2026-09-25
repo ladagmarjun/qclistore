@@ -64,6 +64,8 @@ export interface Product {
     hardware: string | null;
     dimensions: string | null;
     colors: string[] | null;
+    /** Units per colour, e.g. { Black: 4 }; empty for products without colours. */
+    color_stock: Record<string, number>;
     glyph: string;
     image_url: string | null;
     images: ProductImage[] | null;

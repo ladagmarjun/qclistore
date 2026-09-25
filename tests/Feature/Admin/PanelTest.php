@@ -125,6 +125,40 @@ test('an admin can add, edit and delete a product', function () {
     expect(Product::query()->count())->toBe(0);
 });
 
+test('an admin sets stock per colour and the total follows', function () {
+    signInAdmin();
+
+    $this->post(route('admin.products.store'), [
+        'name' => 'Classic Tote',
+        'price' => 2499,
+        'colors' => ['Black', 'Tan'],
+        'color_stock' => [['color' => 'Black', 'stock' => 7], ['color' => 'Tan', 'stock' => 0]],
+    ])->assertSessionHasNoErrors();
+
+    $product = Product::query()->sole();
+    expect($product->color_stock)->toBe(['Black' => 7, 'Tan' => 0])
+        ->and($product->stock)->toBe(7);
+
+    $this->get(route('admin.products.edit', $product))
+        ->assertInertia(fn (Assert $page) => $page->where('product.color_stock', ['Black' => 7, 'Tan' => 0]));
+
+    $this->put(route('admin.products.update', $product), [
+        'name' => 'Classic Tote',
+        'price' => 2499,
+        'colors' => ['Black'],
+        'color_stock' => [['color' => 'Black', 'stock' => 2]],
+    ])->assertSessionHasNoErrors();
+
+    expect($product->fresh()->color_stock)->toBe(['Black' => 2])
+        ->and($product->fresh()->stock)->toBe(2);
+
+    $this->put(route('admin.products.update', $product), ['name' => 'Classic Tote', 'price' => 2499, 'colors' => [], 'color_stock' => [], 'stock' => 9])
+        ->assertSessionHasNoErrors();
+
+    expect($product->fresh()->color_stock)->toBe([])
+        ->and($product->fresh()->stock)->toBe(9);
+});
+
 test('product validation errors come back to the form', function () {
     signInAdmin();
 

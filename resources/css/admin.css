@@ -265,34 +265,15 @@ select.compact { width: auto; min-height: 34px; padding: 4px 10px; font-size: 13
 .panel h3 { margin-bottom: 16px; }
 .panel > p { margin-top: 0; }
 
-/* ---------- Colour chips + gallery rows ---------- */
+/* ---------- Colour stock + gallery rows ---------- */
 
-.chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; }
-.chip {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 4px 6px 4px 12px;
-    font-size: 13px;
-    color: var(--ink);
-    border: 1px solid var(--line-strong);
-}
-.chip button {
-    background: none;
-    border: 0;
-    font-size: 16px;
-    line-height: 1;
-    padding: 0 4px;
-    color: var(--ink-55);
-    cursor: pointer;
-}
-.chip button:hover { color: var(--sale); }
 .add-row { display: flex; gap: 8px; }
 .add-row .btn { flex-shrink: 0; }
 
 .img-rows { display: flex; flex-direction: column; gap: 10px; margin-bottom: 10px; }
 .img-row { display: grid; grid-template-columns: 48px minmax(0, 1fr) 160px 36px; gap: 10px; align-items: center; }
-.img-row .x {
+.img-row .x,
+.stock-row .x {
     width: 36px;
     height: 36px;
     background: none;
@@ -301,7 +282,14 @@ select.compact { width: auto; min-height: 34px; padding: 4px 10px; font-size: 13
     color: var(--ink-55);
     cursor: pointer;
 }
-.img-row .x:hover { color: var(--sale); border-color: var(--sale); }
+.img-row .x:hover,
+.stock-row .x:hover { color: var(--sale); border-color: var(--sale); }
+
+.stock-rows { display: flex; flex-direction: column; gap: 8px; margin-bottom: 10px; }
+.stock-row { display: grid; grid-template-columns: minmax(0, 1fr) 120px 36px; gap: 10px; align-items: center; }
+.stock-row .name { color: var(--ink); display: flex; align-items: center; gap: 8px; min-width: 0; overflow-wrap: anywhere; }
+.stock-row .error { grid-column: 1 / -1; font-size: 13px; color: var(--sale); }
+.stock-empty { margin: 0 0 8px; }
 
 .preview-img {
     aspect-ratio: 1;

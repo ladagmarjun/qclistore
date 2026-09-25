@@ -31,6 +31,8 @@ class ProductResource extends JsonResource
             'hardware' => $this->hardware,
             'dimensions' => $this->dimensions,
             'colors' => $this->colors,
+            // Units per colour, e.g. {"Black": 4}; {} for products without colours.
+            'color_stock' => (object) ($this->color_stock ?? []),
             'glyph' => $this->glyph,
             'image_url' => $this->image_url,
             'images' => $this->images,

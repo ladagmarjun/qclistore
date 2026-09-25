@@ -68,13 +68,20 @@ class OrderService
                     ]);
                 }
 
-                if ($product->stock < $item['quantity']) {
+                // The same product can appear on several lines, so check against what earlier lines already took.
+                $color = $product->colors ? ($item['color'] ?? null) : null;
+                $available = $product->stockFor($color);
+
+                if ($available < $item['quantity']) {
+                    $what = $color ? "{$product->name} in {$color}" : $product->name;
+
                     throw ValidationException::withMessages([
-                        "items.{$index}.quantity" => "Only {$product->stock} of {$product->name} left in stock.",
+                        "items.{$index}.quantity" => $available > 0 ? "Only {$available} of {$what} left in stock." : "{$what} is out of stock.",
                     ]);
                 }
 
-                $product->decrement('stock', $item['quantity']);
+                $product->adjustStock($color, $item['quantity']);
+                $product->save();
 
                 $totalCents += (int) round((float) $product->price * 100) * $item['quantity'];
                 $lines[] = [
@@ -132,8 +139,17 @@ class OrderService
 
     private function restock(Order $order): void
     {
+        $products = Product::query()
+            ->whereKey($order->items->pluck('product_id'))
+            ->lockForUpdate()
+            ->get()
+            ->keyBy('id');
+
         foreach ($order->items as $item) {
-            Product::query()->whereKey($item->product_id)->increment('stock', $item->quantity);
+            $product = $products->get($item->product_id);
+            $product?->adjustStock($item->color, -$item->quantity);
         }
+
+        $products->each->save();
     }
 }

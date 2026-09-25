@@ -92,3 +92,52 @@ test('orders cannot skip or reverse statuses', function () {
 
     $service->updateStatus($order, 'delivered');
 })->throws(ValidationException::class);
+
+test('each colour has its own stock', function () {
+    $product = Product::factory()->create(['colors' => ['Black', 'Tan'], 'color_stock' => ['Black' => 3, 'Tan' => 1]]);
+    $service = app(OrderService::class);
+
+    $service->place(customerDetails(), [['product_id' => $product->id, 'quantity' => 2, 'color' => 'Black']]);
+
+    expect($product->fresh()->color_stock)->toBe(['Black' => 1, 'Tan' => 1])
+        ->and($product->fresh()->stock)->toBe(2);
+
+    expect(fn () => $service->place(customerDetails(), [['product_id' => $product->id, 'quantity' => 2, 'color' => 'Tan']]))
+        ->toThrow(ValidationException::class, 'Only 1 of');
+});
+
+test('a sold-out colour cannot be ordered even when other colours are in stock', function () {
+    $product = Product::factory()->create(['colors' => ['Black', 'Tan'], 'color_stock' => ['Black' => 5, 'Tan' => 0]]);
+
+    expect(fn () => app(OrderService::class)->place(customerDetails(), [['product_id' => $product->id, 'quantity' => 1, 'color' => 'Tan']]))
+        ->toThrow(ValidationException::class, 'is out of stock');
+});
+
+test('several lines of the same colour share its stock', function () {
+    $product = Product::factory()->create(['colors' => ['Black'], 'color_stock' => ['Black' => 3]]);
+
+    expect(fn () => app(OrderService::class)->place(customerDetails(), [
+        ['product_id' => $product->id, 'quantity' => 2, 'color' => 'Black'],
+        ['product_id' => $product->id, 'quantity' => 2, 'color' => 'Black'],
+    ]))->toThrow(ValidationException::class);
+
+    expect($product->fresh()->color_stock)->toBe(['Black' => 3]);
+});
+
+test('cancelling returns stock to the colour that was ordered', function () {
+    $product = Product::factory()->create(['colors' => ['Black', 'Tan'], 'color_stock' => ['Black' => 2, 'Tan' => 2]]);
+    $service = app(OrderService::class);
+
+    $order = $service->place(customerDetails(), [['product_id' => $product->id, 'quantity' => 2, 'color' => 'Tan']]);
+    $service->cancel($order->fresh());
+
+    expect($product->fresh()->color_stock)->toBe(['Black' => 2, 'Tan' => 2])
+        ->and($product->fresh()->stock)->toBe(4);
+});
+
+test('a total stock without per-colour numbers is split across the colours', function () {
+    $product = Product::factory()->create(['colors' => ['Black', 'Tan', 'Navy'], 'stock' => 10]);
+
+    expect($product->color_stock)->toBe(['Black' => 4, 'Tan' => 3, 'Navy' => 3])
+        ->and($product->stock)->toBe(10);
+});

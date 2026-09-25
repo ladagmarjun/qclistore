@@ -33,6 +33,10 @@ class ProductRequest extends FormRequest
             'dimensions' => ['nullable', 'string', 'max:100'],
             'colors' => ['sometimes', 'array'],
             'colors.*' => ['string', 'max:30'],
+            // Stock per colour as [{color, stock}]; when sent, the product's total stock is their sum.
+            'color_stock' => ['sometimes', 'array'],
+            'color_stock.*.color' => ['required', 'string', 'max:30'],
+            'color_stock.*.stock' => ['required', 'integer', 'min:0', 'max:1000000'],
             'glyph' => ['nullable', 'string', 'max:10'],
             'image_url' => ['nullable', 'url', 'max:500'],
             'images' => ['sometimes', 'array'],
@@ -42,7 +46,7 @@ class ProductRequest extends FormRequest
             'links.*' => ['nullable', 'url', 'max:500'],
             'rating' => ['nullable', 'numeric', 'min:0', 'max:5'],
             'review_count' => ['nullable', 'integer', 'min:0'],
-            'stock' => ['required', 'integer', 'min:0'],
+            'stock' => ['required_without:color_stock', 'integer', 'min:0', 'max:1000000'],
             'is_active' => ['sometimes', 'boolean'],
         ];
     }
@@ -66,6 +70,13 @@ class ProductRequest extends FormRequest
 
         if (isset($data['links'])) {
             $data['links'] = array_filter($data['links']);
+        }
+
+        // Without per-colour numbers, a total stock is split evenly across the colours (see Product::booted()).
+        if (array_key_exists('color_stock', $data)) {
+            $data['color_stock'] = array_column($data['color_stock'], 'stock', 'color');
+        } elseif (array_key_exists('stock', $data)) {
+            $data['color_stock'] = [];
         }
 
         return $data;

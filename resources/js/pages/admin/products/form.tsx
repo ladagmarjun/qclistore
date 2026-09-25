@@ -38,6 +38,7 @@ export default function ProductForm({ product, categories, brands }: Props) {
         hardware: p?.hardware ?? '',
         dimensions: p?.dimensions ?? '',
         colors: p?.colors ?? [],
+        color_stock: Object.fromEntries((p?.colors ?? []).map((c) => [c, String(p?.color_stock?.[c] ?? 0)])) as Record<string, string>,
         glyph: p?.glyph ?? '👜',
         image_url: p?.image_url ?? '',
         images: (p?.images ?? []) as ProductImage[],
@@ -53,11 +54,27 @@ export default function ProductForm({ product, categories, brands }: Props) {
     const errors = form.errors as Record<string, string | undefined>;
     const error = (key: string) => errors[key] ?? Object.entries(errors).find(([k]) => k.startsWith(`${key}.`))?.[1];
 
+    const hasColors = data.colors.length > 0;
+    const colorTotal = data.colors.reduce((sum, c) => sum + (Number(data.color_stock[c]) || 0), 0);
+
     const addColor = () => {
         const value = newColor.trim();
-        if (value && !data.colors.includes(value)) setData('colors', [...data.colors, value]);
+        if (value && !data.colors.some((c) => c.toLowerCase() === value.toLowerCase())) {
+            // The first colour starts with the current total stock, so adding colours never silently zeroes it.
+            const start = hasColors ? '0' : data.stock || '0';
+            setData((d) => ({ ...d, colors: [...d.colors, value], color_stock: { ...d.color_stock, [value]: start } }));
+        }
         setNewColor('');
     };
+
+    const removeColor = (color: string) =>
+        setData((d) => {
+            const colors = d.colors.filter((c) => c !== color);
+            const colorStock = Object.fromEntries(Object.entries(d.color_stock).filter(([c]) => c !== color));
+            // Removing the last colour keeps its stock as the product's total.
+            const stock = colors.length ? d.stock : (d.color_stock[color] ?? d.stock);
+            return { ...d, colors, color_stock: colorStock, stock };
+        });
 
     const setImage = (index: number, changes: Partial<ProductImage>) =>
         setData(
@@ -77,7 +94,8 @@ export default function ProductForm({ product, categories, brands }: Props) {
             tag: strOrNull(d.tag),
             price: numOrNull(d.price),
             was_price: numOrNull(d.was_price),
-            stock: numOrNull(d.stock),
+            stock: d.colors.length ? d.colors.reduce((sum, c) => sum + (Number(d.color_stock[c]) || 0), 0) : numOrNull(d.stock),
+            color_stock: d.colors.map((c) => ({ color: c, stock: Number(d.color_stock[c]) || 0 })),
             leather_type: strOrNull(d.leather_type),
             hardware: strOrNull(d.hardware),
             dimensions: strOrNull(d.dimensions),
@@ -146,7 +164,7 @@ export default function ProductForm({ product, categories, brands }: Props) {
                         </div>
 
                         <div className="panel">
-                            <h3>Pricing &amp; inventory</h3>
+                            <h3>Pricing &amp; stock</h3>
                             <div className="row">
                                 <Field label="Price (₱) *" htmlFor="f-price" error={error('price')}>
                                     <input id="f-price" type="number" min="0" step="0.01" required value={data.price} onChange={(e) => setData('price', e.target.value)} />
@@ -154,44 +172,51 @@ export default function ProductForm({ product, categories, brands }: Props) {
                                 <Field label="Compare-at price (₱)" htmlFor="f-was" hint="Shown struck through when set." error={error('was_price')}>
                                     <input id="f-was" type="number" min="0" step="0.01" value={data.was_price} onChange={(e) => setData('was_price', e.target.value)} />
                                 </Field>
-                                <Field label="Stock *" htmlFor="f-stock" error={error('stock')}>
-                                    <input id="f-stock" type="number" min="0" step="1" required value={data.stock} onChange={(e) => setData('stock', e.target.value)} />
+                                <Field
+                                    label={hasColors ? 'Total stock' : 'Stock *'}
+                                    htmlFor="f-stock"
+                                    hint={hasColors ? 'Sum of the colours below.' : undefined}
+                                    error={error('stock')}
+                                >
+                                    {hasColors ? (
+                                        <input id="f-stock" type="number" value={colorTotal} readOnly disabled />
+                                    ) : (
+                                        <input id="f-stock" type="number" min="0" step="1" required value={data.stock} onChange={(e) => setData('stock', e.target.value)} />
+                                    )}
                                 </Field>
                             </div>
-                        </div>
-
-                        <div className="panel">
-                            <h3>Materials</h3>
-                            <div className="row">
-                                <Field label="Leather type" htmlFor="f-leather" error={error('leather_type')}>
-                                    <input id="f-leather" type="text" placeholder="e.g. Full-grain" value={data.leather_type} onChange={(e) => setData('leather_type', e.target.value)} />
-                                </Field>
-                                <Field label="Hardware" htmlFor="f-hw" error={error('hardware')}>
-                                    <input id="f-hw" type="text" placeholder="e.g. Gold-tone" value={data.hardware} onChange={(e) => setData('hardware', e.target.value)} />
-                                </Field>
-                                <Field label="Dimensions" htmlFor="f-dim" error={error('dimensions')}>
-                                    <input id="f-dim" type="text" placeholder="30 x 25 x 13 cm" value={data.dimensions} onChange={(e) => setData('dimensions', e.target.value)} />
-                                </Field>
-                            </div>
-                            <Field label="Colours" htmlFor="f-color" error={error('colors')}>
-                                <div className="chips">
-                                    {data.colors.length ? (
-                                        data.colors.map((c) => (
-                                            <span className="chip" key={c}>
-                                                {c}
-                                                <button
-                                                    type="button"
-                                                    aria-label={`Remove ${c}`}
-                                                    onClick={() => setData('colors', data.colors.filter((x) => x !== c))}
-                                                >
+                            <Field
+                                label="Colours & stock"
+                                htmlFor="f-color"
+                                hint="Each colour has its own stock. A colour at 0 shows as sold out."
+                                error={error('colors')}
+                            >
+                                {hasColors ? (
+                                    <div className="stock-rows">
+                                        {data.colors.map((c, i) => (
+                                            <div className="stock-row" key={c}>
+                                                <span className="name">
+                                                    {c}
+                                                    {(Number(data.color_stock[c]) || 0) === 0 && <span className="badge low">Sold out</span>}
+                                                </span>
+                                                <input
+                                                    type="number"
+                                                    min="0"
+                                                    step="1"
+                                                    aria-label={`Stock for ${c}`}
+                                                    value={data.color_stock[c] ?? '0'}
+                                                    onChange={(e) => setData('color_stock', { ...data.color_stock, [c]: e.target.value })}
+                                                />
+                                                <button type="button" className="x" aria-label={`Remove ${c}`} onClick={() => removeColor(c)}>
                                                     ×
                                                 </button>
-                                            </span>
-                                        ))
-                                    ) : (
-                                        <span className="muted">No colours yet.</span>
-                                    )}
-                                </div>
+                                                {error(`color_stock.${i}`) && <div className="error">{error(`color_stock.${i}`)}</div>}
+                                            </div>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <p className="muted stock-empty">No colours yet, so stock is one number.</p>
+                                )}
                                 <div className="add-row">
                                     <input
                                         id="f-color"
@@ -207,10 +232,25 @@ export default function ProductForm({ product, categories, brands }: Props) {
                                         }}
                                     />
                                     <button type="button" className="btn secondary small" onClick={addColor}>
-                                        Add
+                                        Add colour
                                     </button>
                                 </div>
                             </Field>
+                        </div>
+
+                        <div className="panel">
+                            <h3>Materials</h3>
+                            <div className="row">
+                                <Field label="Leather type" htmlFor="f-leather" error={error('leather_type')}>
+                                    <input id="f-leather" type="text" placeholder="e.g. Full-grain" value={data.leather_type} onChange={(e) => setData('leather_type', e.target.value)} />
+                                </Field>
+                                <Field label="Hardware" htmlFor="f-hw" error={error('hardware')}>
+                                    <input id="f-hw" type="text" placeholder="e.g. Gold-tone" value={data.hardware} onChange={(e) => setData('hardware', e.target.value)} />
+                                </Field>
+                                <Field label="Dimensions" htmlFor="f-dim" error={error('dimensions')}>
+                                    <input id="f-dim" type="text" placeholder="30 x 25 x 13 cm" value={data.dimensions} onChange={(e) => setData('dimensions', e.target.value)} />
+                                </Field>
+                            </div>
                         </div>
 
                         <div className="panel">
