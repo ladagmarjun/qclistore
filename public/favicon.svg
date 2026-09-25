@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="522 -28 600 600">
+  <defs>
+    <mask id="cut">
+      <rect x="522" y="-28" width="600" height="600" fill="#fff"/>
+      <g stroke="#000" stroke-width="22">
+        <line x1="822" y1="452" x2="622" y2="168"/>
+        <line x1="822" y1="452" x2="736" y2="90"/>
+        <line x1="822" y1="452" x2="826" y2="77"/>
+        <line x1="822" y1="452" x2="916" y2="90"/>
+        <line x1="822" y1="452" x2="1024" y2="168"/>
+      </g>
+      <circle cx="822" cy="452" r="90" fill="#000"/>
+    </mask>
+  </defs>
+  <g fill="#e41b17">
+    <path d="M540 452A282 312 0 0 1 1104 452Z" mask="url(#cut)"/>
+    <polygon points="822,375 899,452 822,529 745,452"/>
+    <circle cx="822" cy="45" r="28"/>
+    <circle cx="707" cy="75" r="22"/>
+    <circle cx="937" cy="75" r="22"/>
+    <circle cx="621" cy="150" r="17"/>
+    <circle cx="1022" cy="150" r="17"/>
+  </g>
+</svg>
