@@ -13,8 +13,12 @@ type ResourceKey = 'categories' | 'brands' | 'stores' | 'banners';
 interface FieldConfig {
     name: string;
     label: string;
-    type?: 'text' | 'url' | 'number' | 'textarea' | 'checkbox';
+    type?: 'text' | 'url' | 'number' | 'textarea' | 'checkbox' | 'select';
     required?: boolean;
+    /** Choices for a select field, built from the listed rows and the row being edited. */
+    options?: (rows: any[], row: any | null) => Array<{ value: string; label: string }>;
+    /** Label of a select field's blank choice, which submits null. */
+    empty?: string;
     hint?: string;
     placeholder?: string;
     default?: boolean;
@@ -43,12 +47,29 @@ const RESOURCES: Record<ResourceKey, ResourceConfig> = {
         singular: 'category',
         sub: 'Group products so shoppers can browse by type.',
         columns: [
-            { label: 'Name', render: (r: Category) => <NameCell title={r.name} sub={`/${r.slug}`} /> },
+            {
+                label: 'Name',
+                render: (r: Category) => (
+                    <div style={r.parent_id ? { paddingLeft: 20 } : undefined}>
+                        <NameCell title={r.parent_id ? `↳ ${r.name}` : r.name} sub={`/${r.slug}`} />
+                    </div>
+                ),
+            },
+            { label: 'Subcategories', num: true, render: (r: Category) => (r.parent_id ? '—' : (r.children_count ?? 0)) },
             { label: 'Products', num: true, render: (r: Category) => r.products_count ?? '—' },
             { label: 'Order', num: true, render: (r: Category) => r.sort_order },
         ],
         fields: [
             { name: 'name', label: 'Name', required: true },
+            {
+                name: 'parent_id',
+                label: 'Parent category',
+                type: 'select',
+                empty: 'None (top-level)',
+                hint: 'Subcategories go one level deep, so only top-level categories are listed.',
+                options: (rows: Category[], row: Category | null) =>
+                    rows.filter((c) => c.parent_id === null && c.id !== row?.id).map((c) => ({ value: String(c.id), label: c.name })),
+            },
             { name: 'slug', label: 'Slug', hint: 'Leave blank to generate from the name.' },
             { name: 'sort_order', label: 'Sort order', type: 'number' },
         ],
@@ -218,14 +239,14 @@ export default function Catalog({ resource, rows }: { resource: ResourceKey; row
 
                 <div className="panel" ref={panel}>
                     {/* Keyed so switching rows starts a fresh form. */}
-                    <ResourceForm key={`${resource}-${editing?.id ?? 'new'}`} resource={resource} cfg={cfg} row={editing} onDone={() => setEditing(null)} />
+                    <ResourceForm key={`${resource}-${editing?.id ?? 'new'}`} resource={resource} cfg={cfg} rows={rows} row={editing} onDone={() => setEditing(null)} />
                 </div>
             </div>
         </AdminLayout>
     );
 }
 
-function ResourceForm({ resource, cfg, row, onDone }: { resource: ResourceKey; cfg: ResourceConfig; row: Row | null; onDone: () => void }) {
+function ResourceForm({ resource, cfg, rows, row, onDone }: { resource: ResourceKey; cfg: ResourceConfig; rows: Row[]; row: Row | null; onDone: () => void }) {
     const form = useForm<FormValues>(initialValues(cfg.fields, row));
     const errors = form.errors as Record<string, string | undefined>;
 
@@ -270,6 +291,21 @@ function ResourceForm({ resource, cfg, row, onDone }: { resource: ResourceKey; c
                                 <label className="check">
                                     <input type="checkbox" checked={Boolean(value)} onChange={(e) => form.setData(f.name, e.target.checked)} /> {f.label}
                                 </label>
+                            </Field>
+                        );
+                    }
+
+                    if (f.type === 'select') {
+                        return (
+                            <Field key={f.name} label={`${f.label}${f.required ? ' *' : ''}`} htmlFor={id} hint={f.hint} error={errors[f.name]}>
+                                <select id={id} value={String(value)} onChange={(e) => form.setData(f.name, e.target.value)}>
+                                    <option value="">{f.empty ?? '—'}</option>
+                                    {f.options?.(rows, row).map((o) => (
+                                        <option key={o.value} value={o.value}>
+                                            {o.label}
+                                        </option>
+                                    ))}
+                                </select>
                             </Field>
                         );
                     }

@@ -1,7 +1,7 @@
 import { Link } from '@inertiajs/react';
 import { ActiveBadge, PageHead, Pager, rowLink, SearchInput, Thumb, useListFilters } from '@/components/ui';
 import AdminLayout from '@/layouts/admin-layout';
-import { money, plural } from '@/lib/format';
+import { categoryOption, money, plural } from '@/lib/format';
 import { deleteProduct } from '@/lib/products';
 import type { Category, Paginated, Product } from '@/types';
 
@@ -40,7 +40,7 @@ export default function ProductsIndex({ products, categories, filters }: Props) 
                     <option value="">All categories</option>
                     {categories.map((c) => (
                         <option key={c.id} value={c.slug}>
-                            {c.name}
+                            {categoryOption(c)}
                         </option>
                     ))}
                 </select>

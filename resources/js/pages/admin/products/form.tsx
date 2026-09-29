@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { Field, PageHead, UploadButton } from '@/components/ui';
 import AdminLayout from '@/layouts/admin-layout';
 import { toast } from '@/lib/feedback';
-import { date } from '@/lib/format';
+import { categoryOption, date } from '@/lib/format';
 import { deleteProduct } from '@/lib/products';
 import type { Brand, Category, Product, ProductImage } from '@/types';
 
@@ -147,7 +147,7 @@ export default function ProductForm({ product, categories, brands }: Props) {
                                         <option value="">No category</option>
                                         {categories.map((c) => (
                                             <option key={c.id} value={c.id}>
-                                                {c.name}
+                                                {categoryOption(c)}
                                             </option>
                                         ))}
                                     </select>

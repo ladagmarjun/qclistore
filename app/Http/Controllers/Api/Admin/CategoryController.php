@@ -14,7 +14,7 @@ class CategoryController extends Controller
     public function index(): AnonymousResourceCollection
     {
         return CategoryResource::collection(
-            Category::query()->withCount('products')->orderBy('sort_order')->orderBy('name')->get(),
+            Category::tree(fn ($query) => $query->withCount(['products', 'children'])),
         );
     }
 
@@ -27,7 +27,7 @@ class CategoryController extends Controller
 
     public function show(Category $category): CategoryResource
     {
-        return CategoryResource::make($category->loadCount('products'));
+        return CategoryResource::make($category->loadCount(['products', 'children']));
     }
 
     public function update(CategoryRequest $request, Category $category): CategoryResource
@@ -42,6 +42,12 @@ class CategoryController extends Controller
         if ($category->products()->exists()) {
             return response()->json([
                 'message' => __('Move or delete this category\'s products first.'),
+            ], 409);
+        }
+
+        if ($category->children()->exists()) {
+            return response()->json([
+                'message' => __('Move or delete this category\'s subcategories first.'),
             ], 409);
         }
 

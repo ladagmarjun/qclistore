@@ -31,6 +31,17 @@ test('the home endpoint returns banners and products', function () {
         ->assertJsonCount(1, 'new_arrivals');
 });
 
+test('filtering by a parent category includes its subcategories', function () {
+    $bags = Category::factory()->create(['slug' => 'bags']);
+    $totes = Category::factory()->childOf($bags)->create(['slug' => 'totes']);
+    Product::factory()->for($bags)->create();
+    Product::factory()->for($totes)->create();
+    Product::factory()->create();
+
+    $this->getJson(route('products.index', ['category' => 'bags']))->assertJsonCount(2, 'data');
+    $this->getJson(route('products.index', ['category' => 'totes']))->assertJsonCount(1, 'data');
+});
+
 test('products can be filtered by category and are paginated', function () {
     $bags = Category::factory()->create(['slug' => 'bags']);
     Product::factory()->count(2)->for($bags)->create();

@@ -18,10 +18,12 @@ class CategoryResource extends JsonResource
     {
         return [
             'id' => $this->id,
+            'parent_id' => $this->parent_id,
             'name' => $this->name,
             'slug' => $this->slug,
             'sort_order' => $this->sort_order,
             'products_count' => $this->whenCounted('products'),
+            'children_count' => $this->whenCounted('children'),
         ];
     }
 }

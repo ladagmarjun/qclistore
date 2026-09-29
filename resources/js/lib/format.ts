@@ -13,6 +13,11 @@ export function label(value: string | null | undefined): string {
     return String(value ?? '').replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
+/** A category's name for a dropdown, indented when it's a subcategory. Expects categories in tree order. */
+export function categoryOption(category: { name: string; parent_id: number | null }): string {
+    return category.parent_id ? `   ↳ ${category.name}` : category.name;
+}
+
 export function plural(count: number, word: string): string {
     return `${count} ${word}${count === 1 ? '' : 's'}`;
 }

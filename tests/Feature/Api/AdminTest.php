@@ -113,6 +113,34 @@ test('a category with products cannot be deleted', function () {
     $this->deleteJson(route('api.admin.categories.destroy', $category))->assertConflict();
 });
 
+test('a category with subcategories cannot be deleted', function () {
+    actingAsAdmin();
+    $parent = Category::factory()->create();
+    Category::factory()->childOf($parent)->create();
+
+    $this->deleteJson(route('api.admin.categories.destroy', $parent))->assertConflict();
+});
+
+test('subcategories only go one level deep', function () {
+    actingAsAdmin();
+    $bags = Category::factory()->create();
+    $totes = Category::factory()->childOf($bags)->create();
+
+    $this->postJson(route('api.admin.categories.store'), ['name' => 'Mini Totes', 'parent_id' => $totes->id])
+        ->assertJsonValidationErrors('parent_id');
+
+    $this->putJson(route('api.admin.categories.update', $bags), ['name' => $bags->name, 'parent_id' => $bags->id])
+        ->assertJsonValidationErrors('parent_id');
+
+    $shoes = Category::factory()->create();
+    $this->putJson(route('api.admin.categories.update', $bags), ['name' => $bags->name, 'parent_id' => $shoes->id])
+        ->assertJsonValidationErrors('parent_id');
+
+    $this->postJson(route('api.admin.categories.store'), ['name' => 'Clutches', 'parent_id' => $bags->id])
+        ->assertCreated()
+        ->assertJsonPath('data.parent_id', $bags->id);
+});
+
 test('a category gets a slug from its name', function () {
     actingAsAdmin();
 

@@ -94,6 +94,6 @@ class ProductController extends Controller
      */
     private function categories(): array
     {
-        return CategoryResource::collection(Category::query()->orderBy('sort_order')->orderBy('name')->get())->resolve();
+        return CategoryResource::collection(Category::tree())->resolve();
     }
 }

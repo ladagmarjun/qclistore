@@ -17,7 +17,7 @@ class CategoryController extends Controller
         return Inertia::render('admin/catalog', [
             'resource' => 'categories',
             'rows' => CategoryResource::collection(
-                Category::query()->withCount('products')->orderBy('sort_order')->orderBy('name')->get(),
+                Category::tree(fn ($query) => $query->withCount(['products', 'children'])),
             )->resolve(),
         ]);
     }
@@ -44,6 +44,8 @@ class CategoryController extends Controller
     {
         if ($category->products()->exists()) {
             Inertia::flash('error', __('Move or delete this category\'s products first.'));
+        } elseif ($category->children()->exists()) {
+            Inertia::flash('error', __('Move or delete this category\'s subcategories first.'));
         } else {
             $category->delete();
 

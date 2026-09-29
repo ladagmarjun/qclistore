@@ -24,7 +24,7 @@ class StorefrontService
      */
     public function categories(): Collection
     {
-        return Category::query()->orderBy('sort_order')->orderBy('name')->get();
+        return Category::tree();
     }
 
     /**

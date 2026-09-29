@@ -26,4 +26,12 @@ class CategoryFactory extends Factory
             'sort_order' => fake()->numberBetween(0, 20),
         ];
     }
+
+    /**
+     * Make it a subcategory of the given top-level category.
+     */
+    public function childOf(Category $parent): static
+    {
+        return $this->state(['parent_id' => $parent->id]);
+    }
 }

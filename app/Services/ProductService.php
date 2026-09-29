@@ -102,7 +102,11 @@ class ProductService
     private function filteredQuery(array $filters): Builder
     {
         $query = Product::query()
-            ->when($filters['category'] ?? null, fn (Builder $query, string $slug) => $query->whereRelation('category', 'slug', $slug))
+            // A parent category's slug also matches products filed under its subcategories.
+            ->when($filters['category'] ?? null, fn (Builder $query, string $slug) => $query->whereHas(
+                'category',
+                fn (Builder $query) => $query->where('slug', $slug)->orWhereRelation('parent', 'slug', $slug)
+            ))
             ->when($filters['brand'] ?? null, fn (Builder $query, string $brand) => $query->where('brand', $brand))
             ->when($filters['tag'] ?? null, fn (Builder $query, string $tag) => $query->where('tag', $tag))
             ->when($filters['min_price'] ?? null, fn (Builder $query, $min) => $query->where('price', '>=', $min))

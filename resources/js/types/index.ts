@@ -8,10 +8,12 @@ export interface AuthUser {
 
 export interface Category {
     id: number;
+    parent_id: number | null;
     name: string;
     slug: string;
     sort_order: number;
     products_count?: number;
+    children_count?: number;
 }
 
 export interface Brand {
