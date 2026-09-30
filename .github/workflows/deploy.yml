@@ -82,6 +82,15 @@ jobs:
             IdentitiesOnly yes
           EOF
 
+          # Fail with a readable message when SSH_KNOWN_HOSTS doesn't cover SSH_HOST, instead of "Host key verification failed".
+          host="${{ secrets.SSH_HOST }}"
+          [ "$SSH_PORT" = "22" ] && lookup="$host" || lookup="[$host]:$SSH_PORT"
+          if ! ssh-keygen -F "$lookup" -f ~/.ssh/known_hosts > /dev/null; then
+            echo "::error::SSH_KNOWN_HOSTS has no entry for $lookup. Regenerate it with: ssh-keyscan -p $SSH_PORT <SSH_HOST>"
+            echo "Hosts it does contain: $(cut -d' ' -f1 ~/.ssh/known_hosts | sort -u | tr '\n' ' ')"
+            exit 1
+          fi
+
       - name: Upload release
         run: |
           ssh vps "mkdir -p '$DEPLOY_PATH/releases/$RELEASE'"
