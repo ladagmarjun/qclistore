@@ -60,15 +60,21 @@ class Category extends Model
      */
     public static function tree(?callable $scope = null): Collection
     {
-        $categories = static::query()
-            ->when($scope, fn (Builder $query) => $scope($query))
-            ->orderBy('sort_order')
-            ->orderBy('name')
-            ->get();
+        $query = Category::query()->orderBy('sort_order')->orderBy('name');
 
-        return new Collection($categories->whereNull('parent_id')
-            ->flatMap(fn (Category $parent) => [$parent, ...$categories->where('parent_id', $parent->id)])
-            ->all());
+        if ($scope) {
+            $scope($query);
+        }
+
+        $categories = $query->get();
+        $ordered = [];
+
+        foreach ($categories->whereNull('parent_id') as $parent) {
+            $ordered[] = $parent;
+            array_push($ordered, ...$categories->where('parent_id', $parent->id)->values()->all());
+        }
+
+        return new Collection($ordered);
     }
 
     /**
