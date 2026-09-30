@@ -8,10 +8,6 @@ use App\Services\SettingService;
 use Illuminate\Support\Facades\DB;
 use Inertia\Testing\AssertableInertia as Assert;
 
-beforeEach(function () {
-    $this->withoutVite();
-});
-
 function signInAdmin(): User
 {
     $admin = User::factory()->admin()->create();

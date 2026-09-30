@@ -14,8 +14,10 @@ use Tests\TestCase;
 |
 */
 
+// Pages render without built assets, so tests don't need `npm run build` first (CI never builds them).
 pest()->extend(TestCase::class)
     ->use(RefreshDatabase::class)
+    ->beforeEach(fn () => $this->withoutVite())
     ->in('Feature');
 
 /*
