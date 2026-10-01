@@ -128,6 +128,8 @@ jobs:
 
       - name: Upload release
         run: |
+          # A DEPLOY_PATH pasted with a trailing space, newline or slash would create a second, look-alike folder.
+          DEPLOY_PATH="$(printf '%s' "$DEPLOY_PATH" | tr -d '\r\n' | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//' -e 's#/*$##')"
           ssh vps "mkdir -p '$DEPLOY_PATH/releases/$RELEASE'"
           rsync -az --delete \
             --exclude='.git' \
@@ -141,6 +143,7 @@ jobs:
 
       - name: Activate release
         run: |
+          DEPLOY_PATH="$(printf '%s' "$DEPLOY_PATH" | tr -d '\r\n' | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//' -e 's#/*$##')"
           ssh vps "DEPLOY_PATH='$DEPLOY_PATH' RELEASE='$RELEASE' PHP_FPM_SERVICE='$PHP_FPM_SERVICE' bash -s" <<'EOF'
           set -euo pipefail
 
@@ -149,6 +152,8 @@ jobs:
 
           if [ ! -f "$shared/.env" ]; then
             echo "Missing $shared/.env; create it on the server before deploying." >&2
+            echo "Logged in as $(whoami). Contents of DEPLOY_PATH and DEPLOY_PATH/shared:" >&2
+            ls -la "$DEPLOY_PATH" "$shared" >&2 || true
             exit 1
           fi
 
