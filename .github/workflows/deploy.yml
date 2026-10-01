@@ -104,8 +104,11 @@ jobs:
           chmod 600 ~/.ssh/id_deploy
           # Print the key's fingerprint (not the key) so it can be matched against `ssh-keygen -lf ~/.ssh/authorized_keys` on the VPS.
           echo "Deploy key fingerprint: $(ssh-keygen -lf ~/.ssh/id_deploy 2>&1 || true)"
+          [ "$SSH_PORT" = "22" ] && lookup="$host" || lookup="[$host]:$SSH_PORT"
           # Keep only real host key lines; drop blanks and the "# host:22 SSH-2.0" comments ssh-keyscan prints.
-          printf '%s\n' "$SSH_KNOWN_HOSTS" | tr -d '\r' | sed -e 's/^[[:space:]]*//' | grep -v -e '^#' -e '^$' > ~/.ssh/known_hosts || true
+          # A line copied without its leading host ("ssh-ed25519 AAAA...") is pinned to SSH_HOST.
+          printf '%s\n' "$SSH_KNOWN_HOSTS" | tr -d '\r' | sed -e 's/^[[:space:]]*//' | grep -v -e '^#' -e '^$' \
+            | sed -E "s/^((ssh|ecdsa|sk)-[^ ]+ )/$lookup \1/" > ~/.ssh/known_hosts || true
           cat > ~/.ssh/config <<EOF
           Host vps
             HostName $host
@@ -116,7 +119,6 @@ jobs:
           EOF
 
           # Fail with a readable message when SSH_KNOWN_HOSTS doesn't cover SSH_HOST, instead of "Host key verification failed".
-          [ "$SSH_PORT" = "22" ] && lookup="$host" || lookup="[$host]:$SSH_PORT"
           if ! ssh-keygen -F "$lookup" -f ~/.ssh/known_hosts > /dev/null; then
             echo "::error::SSH_KNOWN_HOSTS has no entry for SSH_HOST (port $SSH_PORT). Regenerate it with: ssh-keyscan -p $SSH_PORT <SSH_HOST>"
             echo "SSH_KNOWN_HOSTS has $(wc -l < ~/.ssh/known_hosts) key line(s), for these hosts (*** means the same value as SSH_HOST):"
