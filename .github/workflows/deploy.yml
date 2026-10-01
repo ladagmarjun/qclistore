@@ -82,6 +82,12 @@ jobs:
           mkdir -p ~/.ssh
           printf '%s\n' "$SSH_PRIVATE_KEY" | tr -d '\r' > ~/.ssh/id_deploy
           chmod 600 ~/.ssh/id_deploy
+          # Print the key's fingerprint (not the key) so it can be matched against `ssh-keygen -lf ~/.ssh/authorized_keys` on the VPS.
+          if ! ssh-keygen -y -f ~/.ssh/id_deploy > /dev/null 2>&1; then
+            echo "::error::SSH_PRIVATE_KEY isn't a valid private key, or it has a passphrase. Paste the whole key, BEGIN and END lines included."
+            exit 1
+          fi
+          echo "Deploy key fingerprint: $(ssh-keygen -lf ~/.ssh/id_deploy)"
           # Keep only real host key lines; drop blanks and the "# host:22 SSH-2.0" comments ssh-keyscan prints.
           printf '%s\n' "$SSH_KNOWN_HOSTS" | tr -d '\r' | sed -e 's/^[[:space:]]*//' | grep -v -e '^#' -e '^$' > ~/.ssh/known_hosts || true
           cat > ~/.ssh/config <<EOF
