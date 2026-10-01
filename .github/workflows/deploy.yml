@@ -83,7 +83,18 @@ jobs:
           key="$(printf '%s' "$SSH_PRIVATE_KEY" | tr -d '\r')"
           # Browser terminals often lose the key's line breaks on copy, so the key may also be given as one base64 line (`base64 -w0 key`).
           if ! printf '%s' "$key" | grep -q -- '-----BEGIN'; then
-            key="$(printf '%s' "$key" | tr -d '[:space:]' | base64 -d)"
+            if printf '%s' "$key" | grep -qE '^[[:space:]]*(ssh-|ecdsa-|sk-)'; then
+              echo "::error::SSH_PRIVATE_KEY holds a public key (ssh-ed25519 AAAA...). Use the private key file, not the .pub one."
+              exit 1
+            fi
+            if printf '%s' "$key" | grep -q 'PuTTY-User-Key'; then
+              echo "::error::SSH_PRIVATE_KEY is a PuTTY .ppk key. Export it in OpenSSH format (PuTTYgen > Conversions > Export OpenSSH key)."
+              exit 1
+            fi
+            if ! key="$(printf '%s' "$key" | tr -d '[:space:]' | base64 -d 2>/dev/null)" || ! printf '%s' "$key" | grep -q -- '-----BEGIN'; then
+              echo "::error::SSH_PRIVATE_KEY is neither a private key nor its base64 form. It's ${#SSH_PRIVATE_KEY} characters long; re-copy the output of: base64 -w0 <private key file>"
+              exit 1
+            fi
           fi
           # Rebuild the PEM layout when the body arrived on one line with spaces instead of newlines.
           header="$(printf '%s' "$key" | grep -o -- '-----BEGIN [A-Z ]*-----' | head -n1)"
