@@ -80,7 +80,16 @@ jobs:
           user="$(trim "$SSH_USER")"
 
           mkdir -p ~/.ssh
-          printf '%s\n' "$SSH_PRIVATE_KEY" | tr -d '\r' > ~/.ssh/id_deploy
+          key="$(printf '%s' "$SSH_PRIVATE_KEY" | tr -d '\r')"
+          # Browser terminals often lose the key's line breaks on copy, so the key may also be given as one base64 line (`base64 -w0 key`).
+          if ! printf '%s' "$key" | grep -q -- '-----BEGIN'; then
+            key="$(printf '%s' "$key" | tr -d '[:space:]' | base64 -d)"
+          fi
+          # Rebuild the PEM layout when the body arrived on one line with spaces instead of newlines.
+          header="$(printf '%s' "$key" | grep -o -- '-----BEGIN [A-Z ]*-----' | head -n1)"
+          footer="${header/BEGIN/END}"
+          body="$(printf '%s' "$key" | tr '\n' ' ' | sed -e "s/.*$header//" -e "s/$footer.*//" | tr -s '[:space:]' '\n' | grep -v '^$')"
+          printf '%s\n%s\n%s\n' "$header" "$body" "$footer" > ~/.ssh/id_deploy
           chmod 600 ~/.ssh/id_deploy
           # Print the key's fingerprint (not the key) so it can be matched against `ssh-keygen -lf ~/.ssh/authorized_keys` on the VPS.
           echo "Deploy key fingerprint: $(ssh-keygen -lf ~/.ssh/id_deploy 2>&1 || true)"
