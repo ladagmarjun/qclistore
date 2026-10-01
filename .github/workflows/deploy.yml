@@ -35,7 +35,7 @@ jobs:
     environment: production
 
     env:
-      DEPLOY_PATH: ${{ vars.DEPLOY_PATH || '/var/www/qclistore' }}
+      DEPLOY_PATH: ${{ vars.DEPLOY_PATH || secrets.DEPLOY_PATH || '/var/www/qclistore' }}
       SSH_PORT: ${{ vars.SSH_PORT || '22' }}
       PHP_FPM_SERVICE: ${{ vars.PHP_FPM_SERVICE }}
       RELEASE: ${{ github.sha }}
