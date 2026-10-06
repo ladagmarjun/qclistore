@@ -68,6 +68,22 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Seeded Admin Account
+    |--------------------------------------------------------------------------
+    |
+    | The admin account the UserSeeder creates. In production a password must
+    | be set here; elsewhere it falls back to "password".
+    |
+    */
+
+    'admin' => [
+        'name' => env('ADMIN_NAME', 'Admin User'),
+        'email' => env('ADMIN_EMAIL', 'admin@peacock.com'),
+        'password' => env('ADMIN_PASSWORD'),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Application Timezone
     |--------------------------------------------------------------------------
     |
