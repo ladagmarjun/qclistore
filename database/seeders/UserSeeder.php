@@ -53,8 +53,7 @@ class UserSeeder extends Seeder
         }
 
         $admin = new User(['name' => $config['name'], 'email' => $config['email'], 'password' => $password]);
-        $admin->email_verified_at = now();
-        $admin->save();
+        $admin->forceFill(['email_verified_at' => now()])->save();
 
         $admin->assignRole('admin');
     }
