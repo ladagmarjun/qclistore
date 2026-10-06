@@ -13,7 +13,7 @@ class UserSeeder extends Seeder
     public function run(): void
     {
         // Safe to run again: existing accounts are left alone and the sample customers are only added once.
-        if (User::query()->where('email', 'admin@a.com')->doesntExist()) {
+        if (User::query()->where('email', 'admin@peacock.com')->doesntExist()) {
             User::factory()->admin()->create([
                 'name' => 'Admin User',
                 'email' => 'admin@peacock.com',
