@@ -1,6 +1,6 @@
 import { router, useForm } from '@inertiajs/react';
 import { type ReactNode, useRef, useState } from 'react';
-import { ActiveBadge, Field, PageHead, UploadButton } from '@/components/ui';
+import { ActiveBadge, Field, PageHead, Thumb, UploadButton } from '@/components/ui';
 import AdminLayout from '@/layouts/admin-layout';
 import { confirmDialog } from '@/lib/feedback';
 import type { Banner, Brand, Category, Store } from '@/types';
@@ -23,7 +23,7 @@ interface FieldConfig {
     placeholder?: string;
     default?: boolean;
     /** Adds an Upload button that fills the field with the uploaded image's URL, stored under this folder. */
-    upload?: 'banners';
+    upload?: 'banners' | 'categories';
 }
 
 interface ResourceConfig {
@@ -50,8 +50,11 @@ const RESOURCES: Record<ResourceKey, ResourceConfig> = {
             {
                 label: 'Name',
                 render: (r: Category) => (
-                    <div style={r.parent_id ? { paddingLeft: 20 } : undefined}>
-                        <NameCell title={r.parent_id ? `↳ ${r.name}` : r.name} sub={`/${r.slug}`} />
+                    <div className="prod-cell" style={r.parent_id ? { paddingLeft: 20 } : undefined}>
+                        <Thumb imageUrl={r.image_url} glyph="🏷️" />
+                        <div>
+                            <NameCell title={r.parent_id ? `↳ ${r.name}` : r.name} sub={`/${r.slug}`} />
+                        </div>
                     </div>
                 ),
             },
@@ -71,6 +74,7 @@ const RESOURCES: Record<ResourceKey, ResourceConfig> = {
                     rows.filter((c) => c.parent_id === null && c.id !== row?.id).map((c) => ({ value: String(c.id), label: c.name })),
             },
             { name: 'slug', label: 'Slug', hint: 'Leave blank to generate from the name.' },
+            { name: 'image_url', label: 'Image', type: 'url', upload: 'categories', hint: 'Optional. Upload a photo (JPG, PNG, WebP or GIF, up to 5 MB) or paste an image link.' },
             { name: 'sort_order', label: 'Sort order', type: 'number' },
         ],
     },
@@ -314,7 +318,7 @@ function ResourceForm({ resource, cfg, rows, row, onDone }: { resource: Resource
                         const url = String(value).trim();
                         return (
                             <Field key={f.name} label={`${f.label}${f.required ? ' *' : ''}`} htmlFor={id} hint={f.hint} error={errors[f.name]}>
-                                {url && <img className="banner-preview" src={url} alt="" />}
+                                {url && <img className={`${f.upload === 'banners' ? 'banner' : 'square'}-preview`} src={url} alt="" />}
                                 <div className="add-row">
                                     <input id={id} type="url" placeholder="https://…" value={String(value)} onChange={(e) => form.setData(f.name, e.target.value)} />
                                     <UploadButton folder={f.upload} onUploaded={([uploaded]) => form.setData((d) => ({ ...d, [f.name]: uploaded }))} />

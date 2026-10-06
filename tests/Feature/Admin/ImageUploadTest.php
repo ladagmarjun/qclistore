@@ -31,6 +31,17 @@ test('banner images go in their own folder', function () {
     expect(Storage::disk('public')->files('banners'))->toHaveCount(1);
 });
 
+test('category images go in their own folder', function () {
+    $this->actingAs(User::factory()->admin()->create());
+
+    $this->postJson(route('admin.uploads.images'), [
+        'image' => UploadedFile::fake()->image('totes.jpg', 600, 600),
+        'folder' => 'categories',
+    ])->assertCreated();
+
+    expect(Storage::disk('public')->files('categories'))->toHaveCount(1);
+});
+
 test('only known upload folders are allowed', function () {
     $this->actingAs(User::factory()->admin()->create());
 

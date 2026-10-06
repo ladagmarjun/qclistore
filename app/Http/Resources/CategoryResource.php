@@ -21,6 +21,7 @@ class CategoryResource extends JsonResource
             'parent_id' => $this->parent_id,
             'name' => $this->name,
             'slug' => $this->slug,
+            'image_url' => $this->image_url,
             'sort_order' => $this->sort_order,
             'products_count' => $this->whenCounted('products'),
             'children_count' => $this->whenCounted('children'),
