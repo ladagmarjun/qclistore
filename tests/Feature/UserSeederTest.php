@@ -6,8 +6,8 @@ use Database\Seeders\UserSeeder;
 test('the user seeder creates an admin and customers', function () {
     $this->seed(UserSeeder::class);
 
-    expect(User::query()->where('email', 'admin@example.com')->sole()->hasRole('admin'))->toBeTrue()
-        ->and(User::query()->where('email', 'test@example.com')->sole()->hasRole('customer'))->toBeTrue()
+    expect(User::query()->where('email', 'admin@peacock.com')->sole()->hasRole('admin'))->toBeTrue()
+        ->and(User::query()->where('email', 'test@peacock.com')->sole()->hasRole('customer'))->toBeTrue()
         ->and(User::query()->count())->toBe(12);
 });
 
