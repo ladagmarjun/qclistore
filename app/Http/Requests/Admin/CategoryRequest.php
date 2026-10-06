@@ -48,6 +48,7 @@ class CategoryRequest extends FormRequest
             ],
             'name' => ['required', 'string', 'max:100'],
             'slug' => ['sometimes', 'required', 'string', 'max:100', 'alpha_dash', Rule::unique('categories', 'slug')->ignore($category?->id)],
+            'image_url' => ['sometimes', 'nullable', 'url', 'max:500'],
             'sort_order' => ['sometimes', 'integer', 'min:0'],
         ];
     }

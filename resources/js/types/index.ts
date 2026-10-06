@@ -11,6 +11,7 @@ export interface Category {
     parent_id: number | null;
     name: string;
     slug: string;
+    image_url: string | null;
     sort_order: number;
     products_count?: number;
     children_count?: number;

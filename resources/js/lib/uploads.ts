@@ -1,4 +1,4 @@
-export type UploadFolder = 'products' | 'banners';
+export type UploadFolder = 'products' | 'banners' | 'categories';
 
 const xsrfToken = () => decodeURIComponent(document.cookie.match(/(?:^|; )XSRF-TOKEN=([^;]*)/)?.[1] ?? '');
 
