@@ -1,12 +1,11 @@
 name: deploy
 
-# Builds the app on GitHub and ships it to the Hostinger VPS as a new release.
+# Builds the app on GitHub and updates the code on the Hostinger VPS in place.
 #
 # Server layout (under DEPLOY_PATH, default /var/www/qclistore):
-#   releases/<commit>   one folder per deploy; the newest 5 are kept
+#   current             the live code, updated on every deploy; point Nginx at current/public
 #   shared/.env         production settings, created by hand once
-#   shared/storage      uploads, logs, sessions; shared by every release
-#   current             symlink to the live release; point Nginx at current/public
+#   shared/storage      uploads, logs, sessions; linked into current
 #
 # Repository secrets: SSH_HOST, SSH_USER, SSH_PRIVATE_KEY, SSH_KNOWN_HOSTS (output of `ssh-keyscan <host>`).
 # Optional repository variables: SSH_PORT (default 22), DEPLOY_PATH, PHP_FPM_SERVICE (e.g. php8.4-fpm).
@@ -126,28 +125,14 @@ jobs:
             exit 1
           fi
 
-      - name: Upload release
+      - name: Prepare server
         run: |
           # A DEPLOY_PATH pasted with a trailing space, newline or slash would create a second, look-alike folder.
           DEPLOY_PATH="$(printf '%s' "$DEPLOY_PATH" | tr -d '\r\n' | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//' -e 's#/*$##')"
-          ssh vps "mkdir -p '$DEPLOY_PATH/releases/$RELEASE'"
-          rsync -az --delete \
-            --exclude='.git' \
-            --exclude='.github' \
-            --exclude='node_modules' \
-            --exclude='tests' \
-            --exclude='.env' \
-            --exclude='/storage' \
-            --exclude='/public/storage' \
-            ./ "vps:$DEPLOY_PATH/releases/$RELEASE/"
-
-      - name: Activate release
-        run: |
-          DEPLOY_PATH="$(printf '%s' "$DEPLOY_PATH" | tr -d '\r\n' | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//' -e 's#/*$##')"
-          ssh vps "DEPLOY_PATH='$DEPLOY_PATH' RELEASE='$RELEASE' PHP_FPM_SERVICE='$PHP_FPM_SERVICE' bash -s" <<'EOF'
+          ssh vps "DEPLOY_PATH='$DEPLOY_PATH' bash -s" <<'EOF'
           set -euo pipefail
 
-          release="$DEPLOY_PATH/releases/$RELEASE"
+          current="$DEPLOY_PATH/current"
           shared="$DEPLOY_PATH/shared"
 
           if [ ! -f "$shared/.env" ]; then
@@ -157,29 +142,58 @@ jobs:
             exit 1
           fi
 
-          # Shared files survive between releases.
+          # Earlier deploys made current a symlink to releases/<commit>. Swap it for a real copy of that
+          # release in one step, so the site stays up and later deploys update this one folder.
+          if [ -L "$current" ]; then
+            cp -a "$(readlink -f "$current")" "$DEPLOY_PATH/current_new"
+            mv -Tf "$DEPLOY_PATH/current_new" "$current"
+            echo "Converted current from a release symlink to a folder; old releases/ can now be deleted."
+          fi
+          mkdir -p "$current"
+
+          # Shared files survive between deploys.
           mkdir -p "$shared/storage/app/public" "$shared/storage/framework/cache/data" \
             "$shared/storage/framework/sessions" "$shared/storage/framework/views" "$shared/storage/logs"
-          ln -nfs "$shared/.env" "$release/.env"
-          ln -nfs "$shared/storage" "$release/storage"
+          ln -nfs "$shared/.env" "$current/.env"
+          ln -nfs "$shared/storage" "$current/storage"
 
-          cd "$release"
+          # Show a maintenance page while files change underneath the running app.
+          if [ -f "$current/artisan" ] && [ -d "$current/vendor" ]; then
+            cd "$current" && php artisan down --retry=15 || true
+          fi
+          EOF
+
+      - name: Upload code
+        run: |
+          DEPLOY_PATH="$(printf '%s' "$DEPLOY_PATH" | tr -d '\r\n' | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//' -e 's#/*$##')"
+          # Excluded paths are left alone on the server, so the .env and storage links survive --delete.
+          rsync -az --delete \
+            --exclude='.git' \
+            --exclude='.github' \
+            --exclude='node_modules' \
+            --exclude='tests' \
+            --exclude='/.env' \
+            --exclude='/storage' \
+            --exclude='/public/storage' \
+            ./ "vps:$DEPLOY_PATH/current/"
+
+      - name: Activate
+        run: |
+          DEPLOY_PATH="$(printf '%s' "$DEPLOY_PATH" | tr -d '\r\n' | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//' -e 's#/*$##')"
+          ssh vps "DEPLOY_PATH='$DEPLOY_PATH' RELEASE='$RELEASE' PHP_FPM_SERVICE='$PHP_FPM_SERVICE' bash -s" <<'EOF'
+          set -euo pipefail
+
+          cd "$DEPLOY_PATH/current"
           php artisan storage:link --force
           php artisan migrate --force
           php artisan optimize
-
-          # Switch the live site over in one step.
-          ln -nfs "$release" "$DEPLOY_PATH/current_tmp"
-          mv -Tf "$DEPLOY_PATH/current_tmp" "$DEPLOY_PATH/current"
+          php artisan up
 
           # Workers pick up the new code on their next job; PHP-FPM drops its cached copy of the old one.
           php artisan queue:restart
           if [ -n "$PHP_FPM_SERVICE" ]; then
             sudo -n systemctl reload "$PHP_FPM_SERVICE"
           fi
-
-          # Keep the newest 5 releases for rollbacks.
-          ls -1dt "$DEPLOY_PATH"/releases/*/ | tail -n +6 | xargs -r rm -rf
 
           echo "Deployed $RELEASE"
           EOF
