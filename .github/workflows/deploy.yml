@@ -143,10 +143,13 @@ jobs:
           fi
 
           # Earlier deploys made current a symlink to releases/<commit>. Swap it for a real copy of that
-          # release in one step, so the site stays up and later deploys update this one folder.
+          # release, so later deploys update this one folder. rename() can't put a directory over a
+          # symlink, so the link is removed first; the site is only without code for that instant.
           if [ -L "$current" ]; then
+            rm -rf "$DEPLOY_PATH/current_new" # left over from an interrupted swap
             cp -a "$(readlink -f "$current")" "$DEPLOY_PATH/current_new"
-            mv -Tf "$DEPLOY_PATH/current_new" "$current"
+            rm "$current"
+            mv -T "$DEPLOY_PATH/current_new" "$current"
             echo "Converted current from a release symlink to a folder; old releases/ can now be deleted."
           fi
           mkdir -p "$current"
