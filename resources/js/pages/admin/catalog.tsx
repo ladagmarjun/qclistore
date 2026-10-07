@@ -132,9 +132,9 @@ const RESOURCES: Record<ResourceKey, ResourceConfig> = {
         fields: [
             { name: 'name', label: 'Name', required: true },
             { name: 'address', label: 'Street address', required: true, placeholder: 'Unit / building / street' },
-            { name: 'barangay', label: 'Barangay', required: true },
-            { name: 'city', label: 'City / Municipality', required: true },
-            { name: 'region', label: 'Region', type: 'select', required: true, empty: 'Select region', options: () => PH_REGIONS.map((r) => ({ value: r, label: r })) },
+            { name: 'barangay', label: 'Barangay' },
+            { name: 'city', label: 'City / Municipality' },
+            { name: 'region', label: 'Region', type: 'select', empty: 'Select region', options: () => PH_REGIONS.map((r) => ({ value: r, label: r })) },
             { name: 'hours', label: 'Opening hours', placeholder: 'Mon–Sun 10:00 AM – 9:00 PM' },
             { name: 'map_url', label: 'Map link', type: 'url' },
             { name: 'sort_order', label: 'Sort order', type: 'number' },
