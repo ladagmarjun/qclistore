@@ -29,6 +29,9 @@ export interface Store {
     id: number;
     name: string;
     address: string;
+    barangay: string | null;
+    city: string | null;
+    region: string | null;
     hours: string;
     map_url: string | null;
     sort_order: number;

@@ -40,7 +40,27 @@ const BANNER_PLACEMENTS = [
     { value: 'middle', label: 'Middle' },
 ];
 
-const NameCell = ({ title, sub }: { title: string; sub: string }) => (
+const PH_REGIONS = [
+    'Metro Manila (NCR)',
+    'Cordillera (CAR)',
+    'Ilocos Region (Region I)',
+    'Cagayan Valley (Region II)',
+    'Central Luzon (Region III)',
+    'CALABARZON (Region IV-A)',
+    'MIMAROPA (Region IV-B)',
+    'Bicol Region (Region V)',
+    'Western Visayas (Region VI)',
+    'Central Visayas (Region VII)',
+    'Eastern Visayas (Region VIII)',
+    'Zamboanga Peninsula (Region IX)',
+    'Northern Mindanao (Region X)',
+    'Davao Region (Region XI)',
+    'SOCCSKSARGEN (Region XII)',
+    'Caraga (Region XIII)',
+    'BARMM',
+];
+
+const NameCell =({ title, sub }: { title: string; sub: string }) => (
     <>
         <span className="cell-title">{title}</span>
         <div className="cell-sub">{sub}</div>
@@ -105,13 +125,16 @@ const RESOURCES: Record<ResourceKey, ResourceConfig> = {
         singular: 'store',
         sub: 'Physical branches listed on the storefront.',
         columns: [
-            { label: 'Store', render: (r: Store) => <NameCell title={r.name} sub={r.address} /> },
+            { label: 'Store', render: (r: Store) => <NameCell title={r.name} sub={[r.address, r.barangay && `Brgy. ${r.barangay}`, r.city, r.region].filter(Boolean).join(', ')} /> },
             { label: 'Hours', render: (r: Store) => r.hours },
             { label: 'Status', render: (r: Store) => <ActiveBadge on={r.is_active} /> },
         ],
         fields: [
             { name: 'name', label: 'Name', required: true },
-            { name: 'address', label: 'Address', type: 'textarea', required: true },
+            { name: 'address', label: 'Street address', required: true, placeholder: 'Unit / building / street' },
+            { name: 'barangay', label: 'Barangay', required: true },
+            { name: 'city', label: 'City / Municipality', required: true },
+            { name: 'region', label: 'Region', type: 'select', required: true, empty: 'Select region', options: () => PH_REGIONS.map((r) => ({ value: r, label: r })) },
             { name: 'hours', label: 'Opening hours', placeholder: 'Mon–Sun 10:00 AM – 9:00 PM' },
             { name: 'map_url', label: 'Map link', type: 'url' },
             { name: 'sort_order', label: 'Sort order', type: 'number' },
