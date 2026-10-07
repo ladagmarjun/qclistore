@@ -87,6 +87,15 @@ test('the dashboard shows store stats', function () {
         );
 });
 
+test('a product can be added without a price', function () {
+    signInAdmin();
+
+    $this->post(route('admin.products.store'), ['name' => 'Classic Tote', 'price' => null, 'stock' => 3])
+        ->assertInertiaFlash('success', 'Product added.');
+
+    expect(Product::query()->sole()->price)->toBe('0.00');
+});
+
 test('an admin can add, edit and delete a product', function () {
     signInAdmin();
     $category = Category::factory()->create();

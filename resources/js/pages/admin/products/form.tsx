@@ -166,8 +166,8 @@ export default function ProductForm({ product, categories, brands }: Props) {
                         <div className="panel">
                             <h3>Pricing &amp; stock</h3>
                             <div className="row">
-                                <Field label="Price (₱) *" htmlFor="f-price" error={error('price')}>
-                                    <input id="f-price" type="number" min="0" step="0.01" required value={data.price} onChange={(e) => setData('price', e.target.value)} />
+                                <Field label="Price (₱)" htmlFor="f-price" error={error('price')}>
+                                    <input id="f-price" type="number" min="0" step="0.01" value={data.price} onChange={(e) => setData('price', e.target.value)} />
                                 </Field>
                                 <Field label="Compare-at price (₱)" htmlFor="f-was" hint="Shown struck through when set." error={error('was_price')}>
                                     <input id="f-was" type="number" min="0" step="0.01" value={data.was_price} onChange={(e) => setData('was_price', e.target.value)} />

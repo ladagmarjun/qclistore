@@ -24,7 +24,7 @@ class ProductRequest extends FormRequest
             'name' => ['required', 'string', 'max:255'],
             'slug' => ['nullable', 'string', 'max:255', 'alpha_dash', Rule::unique('products', 'slug')->ignore($product?->id)],
             'description' => ['nullable', 'string'],
-            'price' => ['required', 'numeric', 'min:0', 'max:9999999999'],
+            'price' => ['nullable', 'numeric', 'min:0', 'max:9999999999'],
             'was_price' => ['nullable', 'numeric', 'min:0', 'max:9999999999'],
             'tag' => ['nullable', 'string', 'max:50'],
             'brand' => ['nullable', 'string', 'max:120'],
@@ -60,7 +60,12 @@ class ProductRequest extends FormRequest
     {
         $data = $this->validated();
 
-        $defaults = ['glyph' => '👜', 'rating' => 5.0, 'review_count' => 0];
+        $defaults = ['price' => 0, 'glyph' => '👜', 'rating' => 5.0, 'review_count' => 0];
+
+        // A new product without a price is saved at ₱0.
+        if (! $this->route('product') && ! array_key_exists('price', $data)) {
+            $data['price'] = 0;
+        }
 
         foreach ($defaults as $key => $default) {
             if (array_key_exists($key, $data) && $data[$key] === null) {
