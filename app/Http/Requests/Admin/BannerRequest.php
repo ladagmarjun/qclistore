@@ -2,8 +2,10 @@
 
 namespace App\Http\Requests\Admin;
 
+use App\Models\Banner;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class BannerRequest extends FormRequest
 {
@@ -15,6 +17,7 @@ class BannerRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'placement' => ['sometimes', 'required', Rule::in(Banner::PLACEMENTS)],
             'image_url' => ['required', 'url', 'max:500'],
             'headline' => ['nullable', 'string', 'max:200'],
             'subtext' => ['nullable', 'string', 'max:300'],

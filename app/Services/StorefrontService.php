@@ -14,9 +14,13 @@ class StorefrontService
     /**
      * @return Collection<int, Banner>
      */
-    public function banners(): Collection
+    public function banners(?string $placement = null): Collection
     {
-        return Banner::query()->where('is_active', true)->orderBy('sort_order')->get();
+        return Banner::query()
+            ->where('is_active', true)
+            ->when($placement, fn ($query) => $query->where('placement', $placement))
+            ->orderBy('sort_order')
+            ->get();
     }
 
     /**

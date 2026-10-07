@@ -21,7 +21,8 @@ interface FieldConfig {
     empty?: string;
     hint?: string;
     placeholder?: string;
-    default?: boolean;
+    /** Initial value for a new row: checked state for a checkbox, chosen value for a select. */
+    default?: boolean | string;
     /** Adds an Upload button that fills the field with the uploaded image's URL, stored under this folder. */
     upload?: 'banners' | 'categories';
 }
@@ -33,6 +34,11 @@ interface ResourceConfig {
     columns: Array<{ label: string; num?: boolean; render: (row: any) => ReactNode }>;
     fields: FieldConfig[];
 }
+
+const BANNER_PLACEMENTS = [
+    { value: 'hero', label: 'Hero (top)' },
+    { value: 'middle', label: 'Middle' },
+];
 
 const NameCell = ({ title, sub }: { title: string; sub: string }) => (
     <>
@@ -115,7 +121,7 @@ const RESOURCES: Record<ResourceKey, ResourceConfig> = {
     banners: {
         title: 'Banners',
         singular: 'banner',
-        sub: 'Hero slides at the top of the home page.',
+        sub: 'Slides for the home page slideshows: hero (top) and middle.',
         columns: [
             {
                 label: 'Banner',
@@ -129,10 +135,12 @@ const RESOURCES: Record<ResourceKey, ResourceConfig> = {
                     </div>
                 ),
             },
+            { label: 'Placement', render: (r: Banner) => BANNER_PLACEMENTS.find((p) => p.value === r.placement)?.label ?? r.placement },
             { label: 'Order', num: true, render: (r: Banner) => r.sort_order },
             { label: 'Status', render: (r: Banner) => <ActiveBadge on={r.is_active} /> },
         ],
         fields: [
+            { name: 'placement', label: 'Placement', type: 'select', required: true, default: 'hero', options: () => BANNER_PLACEMENTS },
             { name: 'image_url', label: 'Image', type: 'url', required: true, upload: 'banners', hint: 'Upload a wide photo (JPG, PNG, WebP or GIF, up to 5 MB) or paste an image link.' },
             { name: 'headline', label: 'Headline' },
             { name: 'subtext', label: 'Subtext' },
@@ -151,7 +159,8 @@ function initialValues(fields: FieldConfig[], row: Row | null): FormValues {
     return Object.fromEntries(
         fields.map((f) => {
             const value = record ? record[f.name] : undefined;
-            if (f.type === 'checkbox') return [f.name, record ? Boolean(value) : (f.default ?? false)];
+            if (f.type === 'checkbox') return [f.name, record ? Boolean(value) : Boolean(f.default)];
+            if (!record && typeof f.default === 'string') return [f.name, f.default];
             if (f.type === 'number') return [f.name, String(value ?? 0)];
             return [f.name, value == null ? '' : String(value)];
         }),
@@ -303,7 +312,7 @@ function ResourceForm({ resource, cfg, rows, row, onDone }: { resource: Resource
                         return (
                             <Field key={f.name} label={`${f.label}${f.required ? ' *' : ''}`} htmlFor={id} hint={f.hint} error={errors[f.name]}>
                                 <select id={id} value={String(value)} onChange={(e) => form.setData(f.name, e.target.value)}>
-                                    <option value="">{f.empty ?? '—'}</option>
+                                    {!f.required && <option value="">{f.empty ?? '—'}</option>}
                                     {f.options?.(rows, row).map((o) => (
                                         <option key={o.value} value={o.value}>
                                             {o.label}

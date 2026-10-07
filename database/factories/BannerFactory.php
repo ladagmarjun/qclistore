@@ -18,6 +18,7 @@ class BannerFactory extends Factory
     public function definition(): array
     {
         return [
+            'placement' => 'hero',
             'image_url' => 'https://picsum.photos/seed/banner-'.fake()->unique()->numberBetween(1, 99999).'/1600/600',
             'headline' => fake()->sentence(4),
             'subtext' => fake()->sentence(),
@@ -25,6 +26,16 @@ class BannerFactory extends Factory
             'sort_order' => fake()->numberBetween(0, 20),
             'is_active' => true,
         ];
+    }
+
+    /**
+     * Indicate that the banner belongs to the mid-page slideshow.
+     */
+    public function middle(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'placement' => 'middle',
+        ]);
     }
 
     /**

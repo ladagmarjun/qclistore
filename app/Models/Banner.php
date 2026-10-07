@@ -10,6 +10,7 @@ use Illuminate\Support\Carbon;
 
 /**
  * @property int $id
+ * @property string $placement
  * @property string $image_url
  * @property string|null $headline
  * @property string|null $subtext
@@ -18,13 +19,16 @@ use Illuminate\Support\Carbon;
  * @property bool $is_active
  * @property Carbon|null $created_at
  */
-#[Fillable(['image_url', 'headline', 'subtext', 'link_url', 'sort_order', 'is_active'])]
+#[Fillable(['placement', 'image_url', 'headline', 'subtext', 'link_url', 'sort_order', 'is_active'])]
 class Banner extends Model
 {
     /** @use HasFactory<BannerFactory> */
     use HasFactory;
 
     public const UPDATED_AT = null;
+
+    /** Where on the storefront a banner's slideshow appears. */
+    public const PLACEMENTS = ['hero', 'middle'];
 
     /**
      * Get the attributes that should be cast.

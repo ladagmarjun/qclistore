@@ -225,3 +225,21 @@ test('an admin can turn off online ordering', function () {
 
     expect(app(SettingService::class)->cartEnabled())->toBeFalse();
 });
+
+test('an admin can create a mid-page banner and placement is validated', function () {
+    actingAsAdmin();
+
+    $this->postJson(route('api.admin.banners.store'), [
+        'placement' => 'middle',
+        'image_url' => 'https://example.com/banner.jpg',
+    ])->assertCreated()->assertJsonPath('data.placement', 'middle');
+
+    $this->postJson(route('api.admin.banners.store'), [
+        'image_url' => 'https://example.com/banner.jpg',
+    ])->assertCreated()->assertJsonPath('data.placement', 'hero');
+
+    $this->postJson(route('api.admin.banners.store'), [
+        'placement' => 'footer',
+        'image_url' => 'https://example.com/banner.jpg',
+    ])->assertJsonValidationErrors('placement');
+});

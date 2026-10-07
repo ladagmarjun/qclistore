@@ -31,6 +31,29 @@ test('the home endpoint returns banners and products', function () {
         ->assertJsonCount(1, 'new_arrivals');
 });
 
+test('the home endpoint splits banners by slideshow placement', function () {
+    Banner::factory()->count(2)->create();
+    Banner::factory()->middle()->create();
+    Banner::factory()->middle()->inactive()->create();
+
+    $this->getJson(route('home'))
+        ->assertOk()
+        ->assertJsonCount(2, 'banners')
+        ->assertJsonPath('banners.0.placement', 'hero')
+        ->assertJsonCount(1, 'middle_banners')
+        ->assertJsonPath('middle_banners.0.placement', 'middle');
+});
+
+test('banners can be filtered by placement', function () {
+    Banner::factory()->count(2)->create();
+    Banner::factory()->middle()->create();
+
+    $this->getJson(route('banners.index'))->assertJsonCount(3, 'data');
+    $this->getJson(route('banners.index', ['placement' => 'hero']))->assertJsonCount(2, 'data');
+    $this->getJson(route('banners.index', ['placement' => 'middle']))->assertJsonCount(1, 'data');
+    $this->getJson(route('banners.index', ['placement' => 'footer']))->assertUnprocessable();
+});
+
 test('filtering by a parent category includes its subcategories', function () {
     $bags = Category::factory()->create(['slug' => 'bags']);
     $totes = Category::factory()->childOf($bags)->create(['slug' => 'totes']);

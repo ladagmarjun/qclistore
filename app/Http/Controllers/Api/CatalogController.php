@@ -8,10 +8,13 @@ use App\Http\Resources\BrandResource;
 use App\Http\Resources\CategoryResource;
 use App\Http\Resources\ProductResource;
 use App\Http\Resources\StoreResource;
+use App\Models\Banner;
 use App\Services\SettingService;
 use App\Services\StorefrontService;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Validation\Rule;
 
 /**
  * Read-only storefront data that isn't tied to one product.
@@ -26,7 +29,8 @@ class CatalogController extends Controller
     public function home(): JsonResponse
     {
         return response()->json([
-            'banners' => BannerResource::collection($this->storefront->banners()),
+            'banners' => BannerResource::collection($this->storefront->banners('hero')),
+            'middle_banners' => BannerResource::collection($this->storefront->banners('middle')),
             'categories' => CategoryResource::collection($this->storefront->categories()),
             'featured' => ProductResource::collection($this->storefront->featuredProducts()),
             'new_arrivals' => ProductResource::collection($this->storefront->newArrivals()),
@@ -43,9 +47,16 @@ class CatalogController extends Controller
         return BrandResource::collection($this->storefront->brands());
     }
 
-    public function banners(): AnonymousResourceCollection
+    /**
+     * Active banners, optionally limited to one slideshow with ?placement=hero|middle.
+     */
+    public function banners(Request $request): AnonymousResourceCollection
     {
-        return BannerResource::collection($this->storefront->banners());
+        $validated = $request->validate([
+            'placement' => ['sometimes', Rule::in(Banner::PLACEMENTS)],
+        ]);
+
+        return BannerResource::collection($this->storefront->banners($validated['placement'] ?? null));
     }
 
     public function stores(): AnonymousResourceCollection

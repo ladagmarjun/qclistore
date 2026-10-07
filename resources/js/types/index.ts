@@ -35,8 +35,11 @@ export interface Store {
     is_active: boolean;
 }
 
+export type BannerPlacement = 'hero' | 'middle';
+
 export interface Banner {
     id: number;
+    placement: BannerPlacement;
     image_url: string;
     headline: string | null;
     subtext: string | null;
