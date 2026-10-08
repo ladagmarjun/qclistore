@@ -4,10 +4,7 @@ use App\Http\Controllers\Admin;
 use Illuminate\Support\Facades\Route;
 
 // The storefront is served by the JSON API in routes/api.php under /api.
-Route::get('/', fn () => response()->json([
-    'name' => config('app.name'),
-    'api' => url('/api'),
-]));
+Route::redirect('/', '/admin');
 
 // Admin panel: Inertia + React pages (resources/js/pages/admin) with session auth.
 Route::prefix('admin')->name('admin.')->group(function () {
