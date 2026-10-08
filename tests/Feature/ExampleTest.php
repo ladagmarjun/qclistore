@@ -1,7 +1,5 @@
 <?php
 
-test('the root url describes the api', function () {
-    $this->get('/')
-        ->assertOk()
-        ->assertJsonStructure(['name', 'api']);
+test('the root url redirects to the admin panel', function () {
+    $this->get('/')->assertRedirect('/admin');
 });
