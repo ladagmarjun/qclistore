@@ -20,8 +20,10 @@ class BannerFactory extends Factory
         return [
             'placement' => 'hero',
             'image_url' => 'https://picsum.photos/seed/banner-'.fake()->unique()->numberBetween(1, 99999).'/1600/600',
+            'label' => strtoupper(fake()->words(2, true)),
             'headline' => fake()->sentence(4),
             'subtext' => fake()->sentence(),
+            'align' => 'center',
             'link_url' => '/products',
             'sort_order' => fake()->numberBetween(0, 20),
             'is_active' => true,

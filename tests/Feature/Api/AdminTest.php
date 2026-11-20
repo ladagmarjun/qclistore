@@ -243,3 +243,24 @@ test('an admin can create a mid-page banner and placement is validated', functio
         'image_url' => 'https://example.com/banner.jpg',
     ])->assertJsonValidationErrors('placement');
 });
+
+test('an admin can set a banner label and text alignment', function () {
+    actingAsAdmin();
+
+    $this->postJson(route('api.admin.banners.store'), [
+        'image_url' => 'https://example.com/banner.jpg',
+        'label' => 'LONG WALLETS',
+        'align' => 'left',
+    ])->assertCreated()
+        ->assertJsonPath('data.label', 'LONG WALLETS')
+        ->assertJsonPath('data.align', 'left');
+
+    $this->postJson(route('api.admin.banners.store'), [
+        'image_url' => 'https://example.com/banner.jpg',
+    ])->assertCreated()->assertJsonPath('data.align', 'center');
+
+    $this->postJson(route('api.admin.banners.store'), [
+        'image_url' => 'https://example.com/banner.jpg',
+        'align' => 'top',
+    ])->assertJsonValidationErrors('align');
+});

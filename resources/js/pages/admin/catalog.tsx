@@ -40,6 +40,12 @@ const BANNER_PLACEMENTS = [
     { value: 'middle', label: 'Middle' },
 ];
 
+const BANNER_ALIGNMENTS = [
+    { value: 'left', label: 'Left' },
+    { value: 'center', label: 'Center' },
+    { value: 'right', label: 'Right' },
+];
+
 const PH_REGIONS = [
     'Metro Manila (NCR)',
     'Cordillera (CAR)',
@@ -152,6 +158,7 @@ const RESOURCES: Record<ResourceKey, ResourceConfig> = {
                     <div className="prod-cell">
                         <img className="banner-thumb" src={r.image_url} alt="" loading="lazy" />
                         <div>
+                            {r.label && <div className="sub">{r.label}</div>}
                             <div className="name">{r.headline || 'Untitled'}</div>
                             <div className="sub">{r.subtext}</div>
                         </div>
@@ -159,14 +166,17 @@ const RESOURCES: Record<ResourceKey, ResourceConfig> = {
                 ),
             },
             { label: 'Placement', render: (r: Banner) => BANNER_PLACEMENTS.find((p) => p.value === r.placement)?.label ?? r.placement },
+            { label: 'Text align', render: (r: Banner) => BANNER_ALIGNMENTS.find((a) => a.value === r.align)?.label ?? r.align },
             { label: 'Order', num: true, render: (r: Banner) => r.sort_order },
             { label: 'Status', render: (r: Banner) => <ActiveBadge on={r.is_active} /> },
         ],
         fields: [
             { name: 'placement', label: 'Placement', type: 'select', required: true, default: 'hero', options: () => BANNER_PLACEMENTS },
             { name: 'image_url', label: 'Image', type: 'url', required: true, upload: 'banners', hint: 'Upload a wide photo (JPG, PNG, WebP or GIF, up to 5 MB) or paste an image link.' },
+            { name: 'label', label: 'Label', placeholder: 'LONG WALLETS', hint: 'Small text shown above the headline.' },
             { name: 'headline', label: 'Headline' },
             { name: 'subtext', label: 'Subtext' },
+            { name: 'align', label: 'Text alignment', type: 'select', required: true, default: 'center', options: () => BANNER_ALIGNMENTS, hint: 'Where the label, headline and subtext sit on the banner.' },
             { name: 'link_url', label: 'Button link', placeholder: '/collections/womens' },
             { name: 'sort_order', label: 'Sort order', type: 'number' },
             { name: 'is_active', label: 'Active', type: 'checkbox', default: true },

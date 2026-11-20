@@ -19,8 +19,10 @@ class BannerRequest extends FormRequest
         return [
             'placement' => ['sometimes', 'required', Rule::in(Banner::PLACEMENTS)],
             'image_url' => ['required', 'url', 'max:500'],
+            'label' => ['nullable', 'string', 'max:60'],
             'headline' => ['nullable', 'string', 'max:200'],
             'subtext' => ['nullable', 'string', 'max:300'],
+            'align' => ['sometimes', 'required', Rule::in(Banner::ALIGNMENTS)],
             'link_url' => ['nullable', 'string', 'max:500'],
             'sort_order' => ['sometimes', 'integer', 'min:0'],
             'is_active' => ['sometimes', 'boolean'],

@@ -12,14 +12,16 @@ use Illuminate\Support\Carbon;
  * @property int $id
  * @property string $placement
  * @property string $image_url
+ * @property string|null $label
  * @property string|null $headline
  * @property string|null $subtext
+ * @property string $align
  * @property string|null $link_url
  * @property int $sort_order
  * @property bool $is_active
  * @property Carbon|null $created_at
  */
-#[Fillable(['placement', 'image_url', 'headline', 'subtext', 'link_url', 'sort_order', 'is_active'])]
+#[Fillable(['placement', 'image_url', 'label', 'headline', 'subtext', 'align', 'link_url', 'sort_order', 'is_active'])]
 class Banner extends Model
 {
     /** @use HasFactory<BannerFactory> */
@@ -29,6 +31,9 @@ class Banner extends Model
 
     /** Where on the storefront a banner's slideshow appears. */
     public const PLACEMENTS = ['hero', 'middle'];
+
+    /** Where the label, headline and subtext sit across the banner. */
+    public const ALIGNMENTS = ['left', 'center', 'right'];
 
     /**
      * Get the attributes that should be cast.

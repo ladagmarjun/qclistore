@@ -40,12 +40,16 @@ export interface Store {
 
 export type BannerPlacement = 'hero' | 'middle';
 
+export type BannerAlign = 'left' | 'center' | 'right';
+
 export interface Banner {
     id: number;
     placement: BannerPlacement;
     image_url: string;
+    label: string | null;
     headline: string | null;
     subtext: string | null;
+    align: BannerAlign;
     link_url: string | null;
     sort_order: number;
     is_active: boolean;
