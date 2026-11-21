@@ -6,6 +6,29 @@ use App\Models\Product;
 use App\Services\OrderService;
 use Illuminate\Support\Facades\DB;
 
+// Use the production cache store: the array store skips serialization, which
+// hid cached models coming back as __PHP_Incomplete_Class.
+beforeEach(fn () => config(['cache.default' => 'database']));
+
+test('every cached storefront endpoint returns the same JSON on a cache hit', function (string $route, array $query) {
+    Banner::factory()->create();
+    Banner::factory()->middle()->create();
+    Brand::factory()->create();
+    Product::factory()->create(['tag' => 'Bestseller']);
+
+    $first = $this->getJson(route($route, $query))->assertOk()->json();
+
+    $this->getJson(route($route, $query))->assertOk()->assertExactJson($first);
+})->with([
+    'home' => ['home', []],
+    'all banners' => ['banners.index', []],
+    'hero banners' => ['banners.index', ['placement' => 'hero']],
+    'middle banners' => ['banners.index', ['placement' => 'middle']],
+    'categories' => ['categories.index', []],
+    'brands' => ['brands.index', []],
+    'stores' => ['stores.index', []],
+]);
+
 test('storefront lists are served from the cache', function () {
     Brand::factory()->create();
     $this->getJson(route('brands.index'))->assertJsonCount(1, 'data');
