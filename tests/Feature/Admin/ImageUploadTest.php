@@ -69,7 +69,10 @@ test('png transparency survives the webp conversion', function () {
     $path = Storage::disk('public')->files('products')[0];
     $stored = imagecreatefromstring(Storage::disk('public')->get($path));
     $alpha = (imagecolorat($stored, 10, 10) >> 24) & 0x7F;
-    expect($path)->toEndWith('.webp')->and($alpha)->toBe(127);
+
+    // GD's 7-bit alpha (0 opaque, 127 clear) round-trips through WebP's 8-bit alpha,
+    // so some libwebp builds return 126. Anything this high is invisible.
+    expect($path)->toEndWith('.webp')->and($alpha)->toBeGreaterThanOrEqual(120);
 });
 
 test('gifs are stored as uploaded so animations keep working', function () {
