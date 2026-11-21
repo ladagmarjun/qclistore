@@ -42,15 +42,17 @@ Route::prefix('auth')->group(function () {
     });
 });
 
-// Storefront
-Route::get('home', [CatalogController::class, 'home'])->name('home');
-Route::get('categories', [CatalogController::class, 'categories'])->name('categories.index');
-Route::get('brands', [CatalogController::class, 'brands'])->name('brands.index');
-Route::get('banners', [CatalogController::class, 'banners'])->name('banners.index');
-Route::get('stores', [CatalogController::class, 'stores'])->name('stores.index');
-Route::get('settings', [CatalogController::class, 'settings'])->name('settings.show');
-Route::get('products', [ProductController::class, 'index'])->name('products.index');
-Route::get('products/{slug}', [ProductController::class, 'show'])->name('products.show');
+// Storefront: public reads, rate limited per visitor IP (see AppServiceProvider).
+Route::middleware('throttle:storefront')->group(function () {
+    Route::get('home', [CatalogController::class, 'home'])->name('home');
+    Route::get('categories', [CatalogController::class, 'categories'])->name('categories.index');
+    Route::get('brands', [CatalogController::class, 'brands'])->name('brands.index');
+    Route::get('banners', [CatalogController::class, 'banners'])->name('banners.index');
+    Route::get('stores', [CatalogController::class, 'stores'])->name('stores.index');
+    Route::get('settings', [CatalogController::class, 'settings'])->name('settings.show');
+    Route::get('products', [ProductController::class, 'index'])->name('products.index');
+    Route::get('products/{slug}', [ProductController::class, 'show'])->name('products.show');
+});
 
 // Checkout works for guests too; a bearer token attaches the order to the account.
 Route::post('orders', [OrderController::class, 'store'])

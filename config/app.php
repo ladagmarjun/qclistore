@@ -66,6 +66,9 @@ return [
 
     'frontend_url' => env('FRONTEND_URL', 'http://localhost:3000'),
 
+    // Storefront API requests allowed per visitor IP per minute.
+    'storefront_rate_limit' => (int) env('STOREFRONT_RATE_LIMIT', 120),
+
     /*
     |--------------------------------------------------------------------------
     | Seeded Admin Account
