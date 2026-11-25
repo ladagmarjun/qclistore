@@ -17,11 +17,12 @@ use Illuminate\Support\Carbon;
  * @property int|null $parent_id
  * @property string $name
  * @property string $slug
+ * @property string|null $description
  * @property string|null $image_url
  * @property int $sort_order
  * @property Carbon|null $created_at
  */
-#[Fillable(['parent_id', 'name', 'slug', 'image_url', 'sort_order'])]
+#[Fillable(['parent_id', 'name', 'slug', 'description', 'image_url', 'sort_order'])]
 class Category extends Model
 {
     /** @use HasFactory<CategoryFactory> */

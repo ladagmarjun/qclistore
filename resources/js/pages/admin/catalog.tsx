@@ -106,6 +106,7 @@ const RESOURCES: Record<ResourceKey, ResourceConfig> = {
                     rows.filter((c) => c.parent_id === null && c.id !== row?.id).map((c) => ({ value: String(c.id), label: c.name })),
             },
             { name: 'slug', label: 'Slug', hint: 'Leave blank to generate from the name.' },
+            { name: 'description', label: 'Description', type: 'textarea', hint: 'Optional. A short intro shown on the category page.' },
             { name: 'image_url', label: 'Image', type: 'url', upload: 'categories', hint: 'Optional. Upload a photo (JPG, PNG, WebP or GIF, up to 5 MB) or paste an image link.' },
             { name: 'sort_order', label: 'Sort order', type: 'number' },
         ],

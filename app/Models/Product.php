@@ -27,6 +27,7 @@ use Illuminate\Support\Carbon;
  * @property array<string, int> $color_stock
  * @property string $glyph
  * @property string|null $image_url
+ * @property string|null $hover_image_url
  * @property array<int, array{url: string, color: string|null}> $images
  * @property array<string, string> $links
  * @property string $rating
@@ -38,7 +39,7 @@ use Illuminate\Support\Carbon;
  */
 #[Fillable([
     'category_id', 'name', 'slug', 'description', 'price', 'was_price', 'tag', 'brand',
-    'leather_type', 'hardware', 'dimensions', 'colors', 'color_stock', 'glyph', 'image_url', 'images',
+    'leather_type', 'hardware', 'dimensions', 'colors', 'color_stock', 'glyph', 'image_url', 'hover_image_url', 'images',
     'links', 'rating', 'review_count', 'stock', 'is_active',
 ])]
 class Product extends Model

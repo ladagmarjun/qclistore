@@ -41,6 +41,7 @@ export default function ProductForm({ product, categories, brands }: Props) {
         color_stock: Object.fromEntries((p?.colors ?? []).map((c) => [c, String(p?.color_stock?.[c] ?? 0)])) as Record<string, string>,
         glyph: p?.glyph ?? '👜',
         image_url: p?.image_url ?? '',
+        hover_image_url: p?.hover_image_url ?? '',
         images: (p?.images ?? []) as ProductImage[],
         links: { shopee: p?.links.shopee ?? '', lazada: p?.links.lazada ?? '', tiktok: p?.links.tiktok ?? '' },
         rating: p?.rating ?? '5.0',
@@ -102,6 +103,7 @@ export default function ProductForm({ product, categories, brands }: Props) {
             colors: d.colors,
             glyph: strOrNull(d.glyph),
             image_url: strOrNull(d.image_url),
+            hover_image_url: strOrNull(d.hover_image_url),
             images: d.images.filter((img) => img.url.trim()).map((img) => ({ url: img.url.trim(), color: img.color || null })),
             links: { shopee: strOrNull(d.links.shopee), lazada: strOrNull(d.links.lazada), tiktok: strOrNull(d.links.tiktok) },
             rating: numOrNull(d.rating),
@@ -259,6 +261,17 @@ export default function ProductForm({ product, categories, brands }: Props) {
                                 <div className="add-row">
                                     <input id="f-img" type="url" placeholder="https://…" value={data.image_url} onChange={(e) => setData('image_url', e.target.value)} />
                                     <UploadButton onUploaded={([url]) => setData((d) => ({ ...d, image_url: url }))} />
+                                </div>
+                            </Field>
+                            <Field
+                                label="Hover image"
+                                htmlFor="f-hover-img"
+                                hint="Optional. Shown instead of the main image while a shopper hovers the product card."
+                                error={error('hover_image_url')}
+                            >
+                                <div className="add-row">
+                                    <input id="f-hover-img" type="url" placeholder="https://…" value={data.hover_image_url} onChange={(e) => setData('hover_image_url', e.target.value)} />
+                                    <UploadButton onUploaded={([url]) => setData((d) => ({ ...d, hover_image_url: url }))} />
                                 </div>
                             </Field>
                             <Field label="Gallery (optionally one per colour)" error={error('images')}>

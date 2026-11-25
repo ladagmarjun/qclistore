@@ -35,6 +35,8 @@ class ProductResource extends JsonResource
             'color_stock' => (object) ($this->color_stock ?? []),
             'glyph' => $this->glyph,
             'image_url' => $this->image_url,
+            // Optional second photo the storefront shows while the product card is hovered.
+            'hover_image_url' => $this->hover_image_url,
             'images' => $this->images,
             // Cast to an object so an empty value encodes as {} rather than [].
             'links' => (object) $this->links,

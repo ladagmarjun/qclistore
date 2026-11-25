@@ -39,6 +39,7 @@ class ProductRequest extends FormRequest
             'color_stock.*.stock' => ['required', 'integer', 'min:0', 'max:1000000'],
             'glyph' => ['nullable', 'string', 'max:10'],
             'image_url' => ['nullable', 'url', 'max:500'],
+            'hover_image_url' => ['nullable', 'url', 'max:500'],
             'images' => ['sometimes', 'array'],
             'images.*.url' => ['required', 'url', 'max:500'],
             'images.*.color' => ['nullable', 'string', 'max:30'],

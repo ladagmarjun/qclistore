@@ -11,6 +11,7 @@ export interface Category {
     parent_id: number | null;
     name: string;
     slug: string;
+    description: string | null;
     image_url: string | null;
     sort_order: number;
     products_count?: number;
@@ -81,6 +82,8 @@ export interface Product {
     color_stock: Record<string, number>;
     glyph: string;
     image_url: string | null;
+    /** Shown in place of image_url while the product card is hovered. */
+    hover_image_url: string | null;
     images: ProductImage[] | null;
     links: MarketplaceLinks;
     rating: string;

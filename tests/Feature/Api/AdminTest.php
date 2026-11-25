@@ -69,6 +69,30 @@ test('an admin can create a product', function () {
         ->assertJsonPath('data.category.id', $category->id);
 });
 
+test('a product can have a hover image', function () {
+    actingAsAdmin();
+
+    $response = $this->postJson(route('api.admin.products.store'), [
+        'name' => 'Heritage Tote',
+        'stock' => 5,
+        'image_url' => 'https://example.com/front.jpg',
+        'hover_image_url' => 'https://example.com/back.jpg',
+    ])
+        ->assertCreated()
+        ->assertJsonPath('data.image_url', 'https://example.com/front.jpg')
+        ->assertJsonPath('data.hover_image_url', 'https://example.com/back.jpg');
+
+    $product = Product::query()->findOrFail($response->json('data.id'));
+
+    $this->putJson(route('api.admin.products.update', $product), ['name' => 'Heritage Tote', 'stock' => 5, 'hover_image_url' => null])
+        ->assertOk()
+        ->assertJsonPath('data.hover_image_url', null)
+        ->assertJsonPath('data.image_url', 'https://example.com/front.jpg');
+
+    $this->putJson(route('api.admin.products.update', $product), ['name' => 'Heritage Tote', 'stock' => 5, 'hover_image_url' => 'not a link'])
+        ->assertJsonValidationErrors('hover_image_url');
+});
+
 test('updating a product keeps fields that were not sent', function () {
     actingAsAdmin();
     $product = Product::factory()->create(['name' => 'Old Name', 'rating' => 4.2, 'is_active' => true]);
@@ -156,6 +180,27 @@ test('a category can have an image', function () {
 
     $this->putJson(route('api.admin.categories.update', $category), ['name' => 'Totes', 'image_url' => 'not a link'])
         ->assertJsonValidationErrors('image_url');
+});
+
+test('a category can have a description', function () {
+    actingAsAdmin();
+
+    $response = $this->postJson(route('api.admin.categories.store'), ['name' => 'Totes', 'description' => 'Roomy everyday bags.'])
+        ->assertCreated()
+        ->assertJsonPath('data.description', 'Roomy everyday bags.');
+
+    $category = Category::query()->findOrFail($response->json('data.id'));
+
+    $this->putJson(route('api.admin.categories.update', $category), ['name' => 'Totes'])
+        ->assertOk()
+        ->assertJsonPath('data.description', 'Roomy everyday bags.');
+
+    $this->putJson(route('api.admin.categories.update', $category), ['name' => 'Totes', 'description' => null])
+        ->assertOk()
+        ->assertJsonPath('data.description', null);
+
+    $this->putJson(route('api.admin.categories.update', $category), ['name' => 'Totes', 'description' => str_repeat('a', 2001)])
+        ->assertJsonValidationErrors('description');
 });
 
 test('a category gets a slug from its name', function () {
