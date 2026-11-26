@@ -13,6 +13,7 @@ use Illuminate\Support\Carbon;
 /**
  * @property int $id
  * @property int|null $category_id
+ * @property string $gender
  * @property string $name
  * @property string $slug
  * @property string|null $description
@@ -38,7 +39,7 @@ use Illuminate\Support\Carbon;
  * @property Carbon|null $updated_at
  */
 #[Fillable([
-    'category_id', 'name', 'slug', 'description', 'price', 'was_price', 'tag', 'brand',
+    'category_id', 'gender', 'name', 'slug', 'description', 'price', 'was_price', 'tag', 'brand',
     'leather_type', 'hardware', 'dimensions', 'colors', 'color_stock', 'glyph', 'image_url', 'hover_image_url', 'images',
     'links', 'rating', 'review_count', 'stock', 'is_active',
 ])]
@@ -46,6 +47,12 @@ class Product extends Model
 {
     /** @use HasFactory<ProductFactory> */
     use HasFactory;
+
+    /** Who a product is for. Unisex products are listed under both Men and Women. */
+    public const GENDERS = ['men', 'women', 'unisex'];
+
+    /** The storefront menus that can be filtered by gender. */
+    public const MENU_GENDERS = ['men', 'women'];
 
     /**
      * A product with colours tracks stock per colour, and its total stock is always their sum.

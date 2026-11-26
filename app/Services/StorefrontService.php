@@ -42,7 +42,38 @@ class StorefrontService
      */
     public function categories(): Collection
     {
-        return Category::tree();
+        $categories = Category::tree();
+
+        // Which gender menus each category has active products for. A unisex product counts for both.
+        $menus = [];
+        $rows = Product::query()
+            ->where('is_active', true)
+            ->whereNotNull('category_id')
+            ->distinct()
+            ->get(['category_id', 'gender']);
+
+        foreach ($rows as $row) {
+            $genders = $row->gender === 'unisex' ? Product::MENU_GENDERS : [$row->gender];
+            foreach ($genders as $gender) {
+                $menus[$row->category_id][$gender] = true;
+            }
+        }
+
+        // A parent category's menus include its subcategories', matching the products filter.
+        foreach ($categories->whereNotNull('parent_id') as $child) {
+            foreach (array_keys($menus[$child->id] ?? []) as $gender) {
+                $menus[$child->parent_id][$gender] = true;
+            }
+        }
+
+        foreach ($categories as $category) {
+            $category->setAttribute('genders', array_values(array_filter(
+                Product::MENU_GENDERS,
+                fn (string $gender) => isset($menus[$category->id][$gender])
+            )));
+        }
+
+        return $categories;
     }
 
     /**

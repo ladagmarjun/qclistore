@@ -26,6 +26,8 @@ class CategoryResource extends JsonResource
             'sort_order' => $this->sort_order,
             'products_count' => $this->whenCounted('products'),
             'children_count' => $this->whenCounted('children'),
+            // Storefront only: the gender menus (men, women) with active products in this category or its subcategories.
+            'genders' => $this->whenHas('genders'),
         ];
     }
 }

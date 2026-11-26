@@ -162,3 +162,39 @@ test('customers only see their own orders', function () {
     $this->getJson(route('orders.show', $mine))->assertOk();
     $this->getJson(route('orders.show', $theirs))->assertNotFound();
 });
+
+test('filtering by men or women includes unisex products', function () {
+    $purses = Category::factory()->create(['slug' => 'coin-purse']);
+    $mens = Product::factory()->for($purses)->forGender('men')->create();
+    $womens = Product::factory()->for($purses)->forGender('women')->create();
+    $unisex = Product::factory()->for($purses)->forGender('unisex')->create();
+    Product::factory()->forGender('men')->create();
+
+    $ids = fn (array $query) => collect($this->getJson(route('products.index', $query))->assertOk()->json('data'))->pluck('id')->sort()->values()->all();
+
+    expect($ids(['category' => 'coin-purse', 'gender' => 'men']))->toBe([$mens->id, $unisex->id])
+        ->and($ids(['category' => 'coin-purse', 'gender' => 'women']))->toBe([$womens->id, $unisex->id])
+        ->and($ids(['category' => 'coin-purse', 'gender' => 'unisex']))->toBe([$unisex->id])
+        ->and($ids(['category' => 'coin-purse']))->toBe([$mens->id, $womens->id, $unisex->id]);
+
+    $this->getJson(route('products.index', ['gender' => 'kids']))->assertJsonValidationErrors('gender');
+});
+
+test('categories list the gender menus they have active products for', function () {
+    $accessories = Category::factory()->create(['slug' => 'accessories', 'sort_order' => 1]);
+    $purses = Category::factory()->childOf($accessories)->create(['slug' => 'coin-purse']);
+    $belts = Category::factory()->create(['slug' => 'belts', 'sort_order' => 2]);
+    $scarves = Category::factory()->create(['slug' => 'scarves', 'sort_order' => 3]);
+    Product::factory()->for($purses)->forGender('unisex')->create();
+    Product::factory()->for($belts)->forGender('men')->create();
+    Product::factory()->for($scarves)->forGender('women')->inactive()->create();
+
+    $genders = collect($this->getJson(route('categories.index'))->assertOk()->json('data'))->pluck('genders', 'slug');
+
+    expect($genders->all())->toBe([
+        'accessories' => ['men', 'women'],
+        'coin-purse' => ['men', 'women'],
+        'belts' => ['men'],
+        'scarves' => [],
+    ]);
+});

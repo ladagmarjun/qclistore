@@ -12,7 +12,7 @@ class ProductService
     /**
      * Paginate active products for the storefront.
      *
-     * @param  array{category?: string, brand?: string, tag?: string, search?: string, min_price?: numeric, max_price?: numeric, sort?: string}  $filters
+     * @param  array{category?: string, gender?: string, brand?: string, tag?: string, search?: string, min_price?: numeric, max_price?: numeric, sort?: string}  $filters
      * @return LengthAwarePaginator<int, Product>
      */
     public function paginate(array $filters = [], int $perPage = 12): LengthAwarePaginator
@@ -27,7 +27,7 @@ class ProductService
     /**
      * Paginate every product, including inactive ones, for the admin panel.
      *
-     * @param  array{category?: string, brand?: string, tag?: string, search?: string, min_price?: numeric, max_price?: numeric, sort?: string}  $filters
+     * @param  array{category?: string, gender?: string, brand?: string, tag?: string, search?: string, min_price?: numeric, max_price?: numeric, sort?: string}  $filters
      * @return LengthAwarePaginator<int, Product>
      */
     public function paginateForAdmin(array $filters = [], int $perPage = 20): LengthAwarePaginator
@@ -96,7 +96,7 @@ class ProductService
     }
 
     /**
-     * @param  array{category?: string, brand?: string, tag?: string, search?: string, min_price?: numeric, max_price?: numeric, sort?: string}  $filters
+     * @param  array{category?: string, gender?: string, brand?: string, tag?: string, search?: string, min_price?: numeric, max_price?: numeric, sort?: string}  $filters
      * @return Builder<Product>
      */
     private function filteredQuery(array $filters): Builder
@@ -106,6 +106,11 @@ class ProductService
             ->when($filters['category'] ?? null, fn (Builder $query, string $slug) => $query->whereHas(
                 'category',
                 fn (Builder $query) => $query->where('slug', $slug)->orWhereRelation('parent', 'slug', $slug)
+            ))
+            // Men and Women also include unisex products; unisex lists only unisex products.
+            ->when($filters['gender'] ?? null, fn (Builder $query, string $gender) => $query->whereIn(
+                'gender',
+                $gender === 'unisex' ? ['unisex'] : [$gender, 'unisex']
             ))
             ->when($filters['brand'] ?? null, fn (Builder $query, string $brand) => $query->where('brand', $brand))
             ->when($filters['tag'] ?? null, fn (Builder $query, string $tag) => $query->where('tag', $tag))

@@ -8,6 +8,7 @@ use App\Models\Product;
 use App\Services\ProductService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Validation\Rule;
 
 class ProductController extends Controller
 {
@@ -16,12 +17,13 @@ class ProductController extends Controller
     /**
      * List active products.
      *
-     * Filters: category (slug), brand, tag, search, min_price, max_price,
+     * Filters: category (slug), gender (men and women include unisex), brand, tag, search, min_price, max_price,
      * sort (newest, price_asc, price_desc, rating, popular), per_page.
      */
     public function index(Request $request): AnonymousResourceCollection
     {
-        $filters = array_filter($request->only(['category', 'brand', 'tag', 'search', 'min_price', 'max_price', 'sort']));
+        $request->validate(['gender' => ['sometimes', 'nullable', Rule::in(Product::GENDERS)]]);
+        $filters = array_filter($request->only(['category', 'gender', 'brand', 'tag', 'search', 'min_price', 'max_price', 'sort']));
         $perPage = min(max($request->integer('per_page', 12), 1), 60);
 
         return ProductResource::collection($this->products->paginate($filters, $perPage));

@@ -20,6 +20,7 @@ class ProductResource extends JsonResource
             'id' => $this->id,
             'category_id' => $this->category_id,
             'category' => CategoryResource::make($this->whenLoaded('category')),
+            'gender' => $this->gender,
             'name' => $this->name,
             'slug' => $this->slug,
             'description' => $this->description,

@@ -16,6 +16,8 @@ export interface Category {
     sort_order: number;
     products_count?: number;
     children_count?: number;
+    /** Storefront only: the gender menus with active products in this category. */
+    genders?: MenuGender[];
 }
 
 export interface Brand {
@@ -63,10 +65,14 @@ export interface ProductImage {
 
 export type MarketplaceLinks = Partial<Record<'shopee' | 'lazada' | 'tiktok', string>>;
 
+export type Gender = 'men' | 'women' | 'unisex';
+export type MenuGender = Exclude<Gender, 'unisex'>;
+
 export interface Product {
     id: number;
     category_id: number | null;
     category?: Category;
+    gender: Gender;
     name: string;
     slug: string;
     description: string | null;

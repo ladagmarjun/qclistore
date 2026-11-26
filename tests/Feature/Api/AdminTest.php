@@ -309,3 +309,20 @@ test('an admin can set a banner label and text alignment', function () {
         'align' => 'top',
     ])->assertJsonValidationErrors('align');
 });
+
+test('a product is unisex unless an admin picks men or women', function () {
+    actingAsAdmin();
+
+    $response = $this->postJson(route('api.admin.products.store'), ['name' => 'Coin Purse', 'stock' => 5])
+        ->assertCreated()
+        ->assertJsonPath('data.gender', 'unisex');
+
+    $product = Product::query()->findOrFail($response->json('data.id'));
+
+    $this->putJson(route('api.admin.products.update', $product), ['name' => 'Coin Purse', 'stock' => 5, 'gender' => 'women'])
+        ->assertOk()
+        ->assertJsonPath('data.gender', 'women');
+
+    $this->putJson(route('api.admin.products.update', $product), ['name' => 'Coin Purse', 'stock' => 5, 'gender' => 'kids'])
+        ->assertJsonValidationErrors('gender');
+});

@@ -21,6 +21,7 @@ class ProductRequest extends FormRequest
 
         return [
             'category_id' => ['nullable', 'integer', 'exists:categories,id'],
+            'gender' => ['sometimes', 'required', Rule::in(Product::GENDERS)],
             'name' => ['required', 'string', 'max:255'],
             'slug' => ['nullable', 'string', 'max:255', 'alpha_dash', Rule::unique('products', 'slug')->ignore($product?->id)],
             'description' => ['nullable', 'string'],

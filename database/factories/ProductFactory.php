@@ -34,6 +34,7 @@ class ProductFactory extends Factory
 
         return [
             'category_id' => Category::factory(),
+            'gender' => fake()->randomElement(Product::GENDERS),
             'name' => $name,
             'slug' => $slug,
             'description' => fake()->paragraphs(2, true),
@@ -61,6 +62,16 @@ class ProductFactory extends Factory
             'stock' => fake()->numberBetween(0, 100),
             'is_active' => true,
         ];
+    }
+
+    /**
+     * Indicate who the product is for: men, women or unisex.
+     */
+    public function forGender(string $gender): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'gender' => $gender,
+        ]);
     }
 
     /**

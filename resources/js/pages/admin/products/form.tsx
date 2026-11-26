@@ -5,7 +5,7 @@ import AdminLayout from '@/layouts/admin-layout';
 import { toast } from '@/lib/feedback';
 import { categoryOption, date } from '@/lib/format';
 import { deleteProduct } from '@/lib/products';
-import type { Brand, Category, Product, ProductImage } from '@/types';
+import type { Brand, Category, Gender, Product, ProductImage } from '@/types';
 
 interface Props {
     product: Product | null;
@@ -29,6 +29,7 @@ export default function ProductForm({ product, categories, brands }: Props) {
         slug: p?.slug ?? '',
         description: p?.description ?? '',
         category_id: p?.category_id ? String(p.category_id) : '',
+        gender: p?.gender ?? 'unisex',
         brand: p?.brand ?? '',
         tag: p?.tag ?? '',
         price: p?.price ?? '',
@@ -91,6 +92,7 @@ export default function ProductForm({ product, categories, brands }: Props) {
             slug: strOrNull(d.slug),
             description: strOrNull(d.description),
             category_id: numOrNull(d.category_id),
+            gender: d.gender,
             brand: strOrNull(d.brand),
             tag: strOrNull(d.tag),
             price: numOrNull(d.price),
@@ -152,6 +154,13 @@ export default function ProductForm({ product, categories, brands }: Props) {
                                                 {categoryOption(c)}
                                             </option>
                                         ))}
+                                    </select>
+                                </Field>
+                                <Field label="For" htmlFor="f-gender" error={error('gender')}>
+                                    <select id="f-gender" value={data.gender} onChange={(e) => setData('gender', e.target.value as Gender)}>
+                                        <option value="unisex">Unisex (Men &amp; Women)</option>
+                                        <option value="men">Men</option>
+                                        <option value="women">Women</option>
                                     </select>
                                 </Field>
                                 <Field label="Brand" htmlFor="f-brand" error={error('brand')}>
